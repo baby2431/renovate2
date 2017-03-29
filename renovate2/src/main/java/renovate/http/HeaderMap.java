@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Square, Inc.
+ * Copyright (C) 2016 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,23 +18,14 @@ package renovate.http;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import okhttp3.HttpUrl;
-import renovate.Renovate;
+import java.util.Map;
 
-import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-/** Make a DELETE request. */
 @Documented
-@Target(METHOD)
+@Target(PARAMETER)
 @Retention(RUNTIME)
-public @interface DELETE {
-  /**
-   * A relative or absolute path, or full URL of the endpoint. This value is optional if the first
-   * parameter of the method is annotated with {@link Url @Url}.
-   * <p>
-   * See {@linkplain Renovate.Builder#baseUrl(HttpUrl) base URL} for details of how
-   * this is resolved against a base URL to create the full endpoint URL.
-   */
-  String value() default "";
+public @interface HeaderMap {
+
 }

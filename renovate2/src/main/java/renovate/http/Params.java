@@ -23,43 +23,41 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Query parameter appended to the URL that has no value.
+ * Named pair for a form-encoded request.
  * <p>
- * Passing a {@link java.util.List List} or array will result in a query parameter for each
- * non-{@code null} item.
+ * Values are converted to strings using {@link String#valueOf(Object)} and then form URL encoded.
+ * {@code null} values are ignored. Passing a {@link java.util.List List} or array will result in a
+ * field pair for each non-{@code null} item.
  * <p>
  * Simple Example:
  * <pre><code>
- * &#64;GET("/friends")
- * Call&lt;ResponseBody&gt; friends(@QueryName String filter);
+ * &#64;FormUrlEncoded
+ * &#64;POST("/")
+ * Call&lt;ResponseBody&gt; example(
+ *     &#64;Params("name") String name,
+ *     &#64;Params("occupation") String occupation);
  * </code></pre>
- * Calling with {@code foo.friends("contains(Bob)")} yields {@code /friends?contains(Bob)}.
+ * Calling with {@code foo.example("Bob Smith", "President")} yields a request body of
+ * {@code name=Bob+Smith&occupation=President}.
  * <p>
  * Array/Varargs Example:
  * <pre><code>
- * &#64;GET("/friends")
- * Call&lt;ResponseBody&gt; friends(@QueryName String... filters);
+ * &#64;FormUrlEncoded
+ * &#64;POST("/list")
+ * Call&lt;ResponseBody&gt; example(@Params("name") String... names);
  * </code></pre>
- * Calling with {@code foo.friends("contains(Bob)", "age(42)")} yields
- * {@code /friends?contains(Bob)&age(42)}.
- * <p>
- * Parameter names are URL encoded by default. Specify {@link #encoded() encoded=true} to change
- * this behavior.
- * <pre><code>
- * &#64;GET("/friends")
- * Call&lt;ResponseBody&gt; friends(@QueryName(encoded=true) String filter);
- * </code></pre>
- * Calling with {@code foo.friends("name+age"))} yields {@code /friends?name+age}.
+ * Calling with {@code foo.example("Bob Smith", "Jane Doe")} yields a request body of
+ * {@code name=Bob+Smith&name=Jane+Doe}.
  *
- * @see Query
- * @see QueryMap
+ * @see FormUrlEncoded
+ * @see ParamsMap
  */
 @Documented
 @Target(PARAMETER)
 @Retention(RUNTIME)
-public @interface QueryName {
-  /**
-   * Specifies whether the parameter is already URL encoded.
-   */
+public @interface Params {
+  String value();
+
+  /** Specifies whether the {@linkplain #value() name} and value are already URL encoded. */
   boolean encoded() default false;
 }
