@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Square, Inc.
+ * Copyright (C) 2014 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,30 +19,15 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-
 import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+/**
+ * Treat the response body on methods returning {@link okhttp3.Response Response} as is,
+ * i.e. without converting {@link okhttp3.Response#body() body()} to {@code byte[]}.
+ */
 @Documented
-@Target(TYPE)
+@Target(METHOD)
 @Retention(RUNTIME)
-public @interface HTTP {
-    Method method() default Method.GET;
-
-    Serialize serialize() default Serialize.Params;
-
-    String path() default "";
-
-    boolean hasBody() default false;
-
-
-
-    public static enum Serialize {
-        Params, JSON, XML
-    }
-
-    public static enum Method {
-        GET, HEAD, DELETE,PUT,PATCH,OPTIONS,POST
-    }
+public @interface Streaming {
 }

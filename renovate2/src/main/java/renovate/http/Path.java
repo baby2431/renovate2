@@ -18,4 +18,8 @@ public @interface Path {
 
     String value() default "";
 
+    /**
+     * Specifies whether the argument value to the annotated method parameter is already URL encoded.
+     */
+    boolean encoded() default false;
 }
