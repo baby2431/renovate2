@@ -34,7 +34,7 @@ public @interface HTTP {
 
     String path() default "";
 
-    boolean hasBody() default false;
+    boolean hasBody() default true;
 
 
 

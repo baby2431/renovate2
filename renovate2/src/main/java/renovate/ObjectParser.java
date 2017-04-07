@@ -1,5 +1,6 @@
 package renovate;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -14,10 +15,10 @@ import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
+import okhttp3.Request;
 import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 import renovate.http.Body;
-import renovate.http.Field;
-import renovate.http.FieldMap;
 import renovate.http.FormUrlEncoded;
 import renovate.http.HTTP;
 import renovate.http.Header;
@@ -35,60 +36,104 @@ import renovate.http.Url;
  * Created by xmmc on 2017/3/24.
  */
 
-public class ObjectParser {
-    private  HttpUrl baseUrl = null;
-    private  String httpMethod = null;
-    private  String relativeUrl = null;
-    private  Headers headers = null;
-    private  MediaType contentType = null;
-    private  boolean hasBody = false;
-    private  boolean isFormEncoded = false;
-    private  boolean isMultipart = false;
+public class ObjectParser<R, T> {
+    // Upper and lower characters, digits, underscores, and hyphens, starting with a character.
     static final String PARAM = "[a-zA-Z][a-zA-Z0-9_-]*";
     static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
     static final Pattern PARAM_NAME_REGEX = Pattern.compile(PARAM);
-    Class clazz;
-    Set<String> relativeUrlParamNames;
 
+    final okhttp3.Call.Factory callFactory;
+    final CallAdapter<R, T> callAdapter;
 
+    private final HttpUrl baseUrl;
+    private final Converter<ResponseBody, R> responseConverter;
+    private final String httpMethod;
+    private final String relativeUrl;
+    private final Headers headers;
+    private final MediaType contentType;
+    private final boolean hasBody;
+    private final boolean isFormEncoded;
+    private final boolean isMultipart;
+    private final ParameterHandler<?>[] parameterHandlers;
 
+    ObjectParser(Builder<R, T> builder) {
+        this.callFactory = builder.renovate.callFactory();
+        this.callAdapter = builder.callAdapter;
+        this.baseUrl = builder.renovate.baseUrl();
+        this.responseConverter = builder.responseConverter;
+        this.httpMethod = builder.httpMethod;
+        this.relativeUrl = builder.relativeUrl;
+        this.headers = builder.headers;
+        this.contentType = builder.contentType;
+        this.hasBody = builder.hasBody;
+        this.isFormEncoded = builder.isFormEncoded;
+        this.isMultipart = builder.isMultipart;
+        this.parameterHandlers = builder.parameterHandlers;
+    }
+    /** Builds an HTTP request from method arguments. */
+    Request toRequest(Object... args) throws IOException {
+        OKHttpRequestBuilder requestBuilder = new OKHttpRequestBuilder(httpMethod, baseUrl, relativeUrl, headers,
+                contentType, hasBody, isFormEncoded, isMultipart);
 
+        @SuppressWarnings("unchecked") // It is an error to invoke a method with the wrong arg types.
+                ParameterHandler<Object>[] handlers = (ParameterHandler<Object>[]) parameterHandlers;
 
+        int argumentCount = args != null ? args.length : 0;
+        if (argumentCount != handlers.length) {
+            throw new IllegalArgumentException("Argument count (" + argumentCount
+                    + ") doesn't match expected count (" + handlers.length + ")");
+        }
 
+        for (int p = 0; p < argumentCount; p++) {
+            handlers[p].apply(requestBuilder, args[p]);
+        }
 
+        return requestBuilder.build();
+    }
 
-    static final class Build{
+    /** Builds a method return value from an HTTP response body. */
+    R toResponse(ResponseBody body) throws IOException {
+        return responseConverter.convert(body);
+    }
+    static final class Builder<T, R>  {
         Renovate renovate;
         Class clazz;
         Object object;
         Annotation[] objectAnnotations;
-        String httpMethod;
-        boolean hasBody;
-        String relativeUrl;
-        Set<String> relativeUrlParamNames;
-        MediaType contentType;
-        Headers headers;
-        boolean isFormEncoded;
-        boolean isMultipart;
-        ParameterHandler<?>[] parameterHandlers;
+        java.lang.reflect.Field[] fields;
+
+        Type responseType;
         boolean gotField;
         boolean gotPart;
         boolean gotBody;
         boolean gotPath;
         boolean gotQuery;
         boolean gotUrl;
-        public Build(Renovate renovate,Object object){
-            this.renovate  = renovate;
+        String httpMethod;
+        boolean hasBody;
+        boolean isFormEncoded;
+        boolean isMultipart;
+        String relativeUrl;
+        Headers headers;
+        MediaType contentType;
+        Set<String> relativeUrlParamNames;
+        ParameterHandler<?>[] parameterHandlers;
+        Converter<ResponseBody, T> responseConverter;
+        CallAdapter<T, R> callAdapter;
+
+        public Builder(Renovate renovate, Object object) {
+            this.renovate = renovate;
             clazz = object.getClass();
             objectAnnotations = clazz.getAnnotations();
+            fields = clazz.getDeclaredFields();
             this.object = object;
 
         }
 
-        public ObjectParser build(){
+        public ObjectParser build() {
 
-            for(Annotation annotation:objectAnnotations){
-                parseAnnotation(annotation);
+            for (Annotation annotation : objectAnnotations) {
+                parseHttpAnnotation(annotation);
             }
 
             if (httpMethod == null) {
@@ -106,7 +151,7 @@ public class ObjectParser {
                 }
             }
 
-            int parameterCount = objectAnnotations.length;
+            int parameterCount = fields.length;
             parameterHandlers = new ParameterHandler<?>[parameterCount];
             for (int p = 0; p < parameterCount; p++) {
 //                Type parameterType = parameterTypes[p];
@@ -115,12 +160,15 @@ public class ObjectParser {
 //                            parameterType);
 //                }
 
-                Annotation fieldAnnotations = objectAnnotations[p];
-                if (fieldAnnotations == null) {
-                    throw parameterError(p, "No Retrofit annotation found.");
+                java.lang.reflect.Field field = fields[p];
+                Annotation[] annotations = field.getDeclaredAnnotations();
+                if (annotations == null||annotations.length == 0) {
+                    System.out.println(String.format("field %s no renovate annotation found",field.getName()));
+//                    throw parameterError(p, "No Retrofit annotation found.");
+                    continue;
                 }
 
-                parameterHandlers[p] = parseParameter(p, fieldAnnotations.annotationType(),  new Annotation[]{fieldAnnotations});
+                parameterHandlers[p] = parseParameter(p, field.getType(), annotations);
             }
 
             if (relativeUrl == null && !gotUrl) {
@@ -130,15 +178,21 @@ public class ObjectParser {
                 throw methodError("Non-body HTTP method cannot contain @Body.");
             }
             if (isFormEncoded && !gotField) {
-                throw methodError("Form-encoded method must contain at least one @Field.");
+                throw methodError("Form-encoded method must contain at least one @Params.");
             }
             if (isMultipart && !gotPart) {
                 throw methodError("Multipart method must contain at least one @Part.");
             }
 
-            return new ObjectParser();
+            return new ObjectParser(this);
         }
 
+        /**
+         * @param p             位置
+         * @param parameterType 参数类型
+         * @param annotations   包含的注解
+         * @return
+         */
         private ParameterHandler<?> parseParameter(
                 int p, Type parameterType, Annotation[] annotations) {
             ParameterHandler<?> result = null;
@@ -151,15 +205,15 @@ public class ObjectParser {
                 }
 
                 if (result != null) {
-                    throw parameterError(p, "Multiple Retrofit annotations found, only one allowed.");
+                    throw parameterError(p, "Multiple Renovate annotations found, only one allowed.");
                 }
 
                 result = annotationAction;
             }
 
-            if (result == null) {
-                throw parameterError(p, "No Retrofit annotation found.");
-            }
+//            if (result == null) {
+//                throw parameterError(p, "No Retrofit annotation found.");
+//            }
 
             return result;
         }
@@ -338,13 +392,13 @@ public class ObjectParser {
 
                 return new ParameterHandler.HeaderMap<>(valueConverter);
 
-            } else if (annotation instanceof Field) {
+            } else if (annotation instanceof renovate.http.Params) {
                 if (!isFormEncoded) {
-                    throw parameterError(p, "@Field parameters can only be used with form encoding.");
+                    throw parameterError(p, "@Params parameters can only be used with form encoding.");
                 }
-                Field field = (Field) annotation;
-                String name = field.value();
-                boolean encoded = field.encoded();
+                renovate.http.Params params = (renovate.http.Params) annotation;
+                String name = params.value();
+                boolean encoded = params.encoded();
 
                 gotField = true;
 
@@ -360,25 +414,25 @@ public class ObjectParser {
                     Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
                     Converter<?, String> converter =
                             renovate.stringConverter(iterableType, annotations);
-                    return new ParameterHandler.Field<>(name, converter, encoded).iterable();
+                    return new ParameterHandler.Params<>(name, converter, encoded).iterable();
                 } else if (rawParameterType.isArray()) {
                     Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
                     Converter<?, String> converter =
                             renovate.stringConverter(arrayComponentType, annotations);
-                    return new ParameterHandler.Field<>(name, converter, encoded).array();
+                    return new ParameterHandler.Params<>(name, converter, encoded).array();
                 } else {
                     Converter<?, String> converter =
                             renovate.stringConverter(type, annotations);
-                    return new ParameterHandler.Field<>(name, converter, encoded);
+                    return new ParameterHandler.Params<>(name, converter, encoded);
                 }
 
-            } else if (annotation instanceof FieldMap) {
+            } else if (annotation instanceof renovate.http.ParamsMap) {
                 if (!isFormEncoded) {
-                    throw parameterError(p, "@FieldMap parameters can only be used with form encoding.");
+                    throw parameterError(p, "@ParamsMap parameters can only be used with form encoding.");
                 }
                 Class<?> rawParameterType = Utils.getRawType(type);
                 if (!Map.class.isAssignableFrom(rawParameterType)) {
-                    throw parameterError(p, "@FieldMap parameter type must be Map.");
+                    throw parameterError(p, "@ParamsMap parameter type must be Map.");
                 }
                 Type mapType = Utils.getSupertype(type, rawParameterType, Map.class);
                 if (!(mapType instanceof ParameterizedType)) {
@@ -388,14 +442,14 @@ public class ObjectParser {
                 ParameterizedType parameterizedType = (ParameterizedType) mapType;
                 Type keyType = Utils.getParameterUpperBound(0, parameterizedType);
                 if (String.class != keyType) {
-                    throw parameterError(p, "@FieldMap keys must be of type String: " + keyType);
+                    throw parameterError(p, "@ParamsMap keys must be of type String: " + keyType);
                 }
                 Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
                 Converter<?, String> valueConverter =
                         renovate.stringConverter(valueType, annotations);
 
                 gotField = true;
-                return new ParameterHandler.FieldMap<>(valueConverter, ((FieldMap) annotation).encoded());
+                return new ParameterHandler.ParamsMap<>(valueConverter, ((renovate.http.ParamsMap) annotation).encoded());
 
             } else if (annotation instanceof Part) {
                 if (!isMultipart) {
@@ -462,14 +516,14 @@ public class ObjectParser {
                                     + "include a part name in the annotation.");
                         }
                         Converter<?, RequestBody> converter =
-                                renovate.requestBodyConverter(arrayComponentType, annotations,  new Annotation[]{annotation});
+                                renovate.requestBodyConverter(arrayComponentType, annotations, new Annotation[]{annotation});
                         return new ParameterHandler.Part<>(headers, converter).array();
                     } else if (MultipartBody.Part.class.isAssignableFrom(rawParameterType)) {
                         throw parameterError(p, "@Part parameters using the MultipartBody.Part must not "
                                 + "include a part name in the annotation.");
                     } else {
                         Converter<?, RequestBody> converter =
-                                renovate.requestBodyConverter(type, annotations,  new Annotation[]{annotation});
+                                renovate.requestBodyConverter(type, annotations, new Annotation[]{annotation});
                         return new ParameterHandler.Part<>(headers, converter);
                     }
                 }
@@ -501,7 +555,7 @@ public class ObjectParser {
                 }
 
                 Converter<?, RequestBody> valueConverter =
-                        renovate.requestBodyConverter(valueType, annotations,  new Annotation[]{annotation});
+                        renovate.requestBodyConverter(valueType, annotations, new Annotation[]{annotation});
 
                 PartMap partMap = (PartMap) annotation;
                 return new ParameterHandler.PartMap<>(valueConverter, partMap.encoding());
@@ -517,7 +571,7 @@ public class ObjectParser {
 
                 Converter<?, RequestBody> converter;
                 try {
-                    converter = renovate.requestBodyConverter(type, annotations,  new Annotation[]{annotation});
+                    converter = renovate.requestBodyConverter(type, annotations, new Annotation[]{annotation});
                 } catch (RuntimeException e) {
                     // Wide exception range because factories are user code.
                     throw parameterError(e, p, "Unable to create @Body converter for %s", type);
@@ -540,8 +594,8 @@ public class ObjectParser {
             }
         }
 
-        private void parseAnnotation(Annotation annotation){
-             if (annotation instanceof HTTP) {
+        private void parseHttpAnnotation(Annotation annotation) {
+            if (annotation instanceof HTTP) {
                 HTTP http = (HTTP) annotation;
                 parseHttpMethodAndPath(http.method().name(), http.path(), http.hasBody());
             } else if (annotation instanceof renovate.http.Headers) {
@@ -565,6 +619,7 @@ public class ObjectParser {
 
         /**
          * 设置请求方法和请求方式 获取到url当中的参数
+         *
          * @param httpMethod
          * @param value
          * @param hasBody
@@ -659,7 +714,6 @@ public class ObjectParser {
     }
 
 
-
     static Class<?> boxIfPrimitive(Class<?> type) {
         if (boolean.class == type) return Boolean.class;
         if (byte.class == type) return Byte.class;
@@ -671,11 +725,6 @@ public class ObjectParser {
         if (short.class == type) return Short.class;
         return type;
     }
-
-
-
-
-
 
 
 }

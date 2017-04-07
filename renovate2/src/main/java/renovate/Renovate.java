@@ -42,19 +42,19 @@ public class Renovate {
         this.callbackExecutor = callbackExecutor;
         this.validateEagerly = validateEagerly;
     }
-
     /**
-     * @param object
-     * @return
+     * The factory used to create {@linkplain okhttp3.Call OkHttp calls} for sending a HTTP requests.
+     * Typically an instance of {@link OkHttpClient}.
      */
-    public void post(Object object) {
-
-
-        request(object);
+    public okhttp3.Call.Factory callFactory() {
+        return callFactory;
     }
 
-    private void request(Object object) {
-        ObjectParser objectParser = new ObjectParser.Build(this,object).build();
+    public Object request(Object object) {
+        ObjectParser objectParser = new ObjectParser.Builder<>(this,object).build();
+
+        OkHttpCall<Object> okHttpCall = new OkHttpCall<>(objectParser, args);
+        return objectParser.callAdapter.adapt(okHttpCall);
     }
 
     /**

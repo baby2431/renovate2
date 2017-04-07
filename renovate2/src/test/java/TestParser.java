@@ -1,6 +1,7 @@
 import org.junit.Test;
 
 import renovate.Renovate;
+import renovate.http.Params;
 
 /**
  * Created by xmmc on 2017/3/29.
@@ -12,9 +13,8 @@ public class TestParser {
     public void test(){
         PersonModel p = new PersonModel();
 
-
-        new Renovate().post(p);
-
+        Renovate renovate = new Renovate.Builder().baseUrl("http://baidu.com").build();
+        renovate.post(p);
     }
 
 }
