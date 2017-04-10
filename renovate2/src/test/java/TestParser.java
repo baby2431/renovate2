@@ -11,10 +11,11 @@ public class TestParser {
     @Test
     public void test(){
         PersonModel p = new PersonModel();
+        p.age = "123123";
+        p.name="xiao wenwen";
 
-
-        new Renovate().post(p);
-
+        Renovate renovate = new Renovate.Builder().baseUrl("http://www.baidu.com").build();
+        renovate.post(p);
     }
 
 }
