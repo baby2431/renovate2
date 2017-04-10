@@ -23,7 +23,11 @@ import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import renovate.http.Streaming;
 
+/**
+ * response and request body converter
+ */
 final class BuiltInConverters extends Converter.Factory {
+
   @Override
   public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
       Renovate retrofit) {

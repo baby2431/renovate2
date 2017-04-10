@@ -13,16 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package renovate;
+package renovate.call;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
+import renovate.Renovate;
+import renovate.Utils;
+
 /**
+ * 请求适配器,在Retrofit 当中，对方法的返回类型的适配，然后对Call对象进行请求
  * Adapts a {@link Call} with response type {@code R} into the type of {@code T}. Instances are
  * created by {@linkplain Factory a factory} which is
- * {@linkplain Retrofit.Builder#addCallAdapterFactory(Factory) installed} into the {@link Retrofit}
+ * {@linkplain Renovate.Builder#addCallAdapterFactory(Factory) installed} into the {@link Retrofit}
  * instance.
  */
 public interface CallAdapter<R, T> {

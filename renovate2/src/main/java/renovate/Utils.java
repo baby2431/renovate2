@@ -30,14 +30,14 @@ import java.util.NoSuchElementException;
 import okhttp3.ResponseBody;
 import okio.Buffer;
 
-final class Utils {
+public final class Utils {
   static final Type[] EMPTY_TYPE_ARRAY = new Type[0];
 
   private Utils() {
     // No instances.
   }
 
-  static Class<?> getRawType(Type type) {
+  public static Class<?> getRawType(Type type) {
     if (type == null) throw new NullPointerException("type == null");
 
     if (type instanceof Class<?>) {
@@ -317,8 +317,14 @@ final class Utils {
     }
   }
 
-  static Type getParameterUpperBound(int index, ParameterizedType type) {
-    Type[] types = type.getActualTypeArguments();
+  /**
+   * 得到参数的类型上限
+   * @param index
+   * @param type
+   * @return
+     */
+  public static Type getParameterUpperBound(int index, ParameterizedType type) {
+    Type[] types = type.getActualTypeArguments();//返回参数数组
     if (index < 0 || index >= types.length) {
       throw new IllegalArgumentException(
           "Index " + index + " not in range [0," + types.length + ") for " + type);
@@ -357,7 +363,7 @@ final class Utils {
         + "GenericArrayType, but <" + type + "> is of type " + className);
   }
 
-  static Type getCallResponseType(Type returnType) {
+  public static Type getCallResponseType(Type returnType) {
     if (!(returnType instanceof ParameterizedType)) {
       throw new IllegalArgumentException(
           "Call return type must be parameterized as Call<Foo> or Call<? extends Foo>");

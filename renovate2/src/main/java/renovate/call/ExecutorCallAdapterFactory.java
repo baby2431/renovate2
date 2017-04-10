@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package renovate;
+package renovate.call;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -21,11 +21,13 @@ import java.lang.reflect.Type;
 import java.util.concurrent.Executor;
 
 import okhttp3.Request;
+import renovate.Renovate;
+import renovate.Utils;
 
-final class ExecutorCallAdapterFactory extends CallAdapter.Factory {
+public final class ExecutorCallAdapterFactory extends CallAdapter.Factory {
   final Executor callbackExecutor;
 
-  ExecutorCallAdapterFactory(Executor callbackExecutor) {
+  public ExecutorCallAdapterFactory(Executor callbackExecutor) {
     this.callbackExecutor = callbackExecutor;
   }
 

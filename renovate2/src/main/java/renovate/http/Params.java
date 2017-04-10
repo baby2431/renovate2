@@ -19,6 +19,7 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
@@ -53,10 +54,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @see ParamsMap
  */
 @Documented
-@Target(PARAMETER)
+@Target(FIELD)
 @Retention(RUNTIME)
 public @interface Params {
-  String value();
+  String value() default "";
 
   /** Specifies whether the {@linkplain #value() name} and value are already URL encoded. */
   boolean encoded() default false;
