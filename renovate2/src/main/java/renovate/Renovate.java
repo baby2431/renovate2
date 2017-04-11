@@ -14,6 +14,9 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
+import renovate.call.Call;
+import renovate.call.CallAdapter;
+import renovate.call.Callback;
 
 import static java.util.Collections.unmodifiableList;
 import static renovate.Utils.checkNotNull;

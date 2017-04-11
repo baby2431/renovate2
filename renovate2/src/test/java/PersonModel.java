@@ -1,5 +1,6 @@
 import renovate.http.FormUrlEncoded;
 import renovate.http.HTTP;
+import renovate.http.Ignore;
 import renovate.http.Params;
 
 /**
@@ -9,10 +10,12 @@ import renovate.http.Params;
 @FormUrlEncoded
 public class PersonModel {
 
-
+    @Params
     String name;
 
+
     @Params("age")
+    @Ignore
     int age;
 
 

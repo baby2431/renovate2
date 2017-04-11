@@ -13,14 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package renovate;
+package renovate.call;
 
+
+import renovate.Renovate;
 
 /**
+ * 这个请求放回之后的处理，两个方法当中，只有一个方法会被相应
  * Communicates responses from a server or offline requests. One and only one method will be
  * invoked in response to a given request.
  * <p>
- * Callback methods are executed using the {@link Retrofit} callback executor. When none is
+ * Callback methods are executed using the {@link Renovate} callback executor. When none is
  * specified, the following defaults are used:
  * <ul>
  * <li>Android: Callbacks are executed on the application's main (UI) thread.</li>

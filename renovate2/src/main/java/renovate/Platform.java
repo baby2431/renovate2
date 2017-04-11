@@ -21,6 +21,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.concurrent.Executor;
 
+import renovate.call.CallAdapter;
+import renovate.call.DefaultCallAdapterFactory;
+import renovate.call.ExecutorCallAdapterFactory;
+
 class Platform {
   private static final Platform PLATFORM = findPlatform();
 

@@ -13,18 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package renovate;
+package renovate.call;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import renovate.Renovate;
+import renovate.Utils;
+
 /**
+ * 默认的请求适配器
  * Creates call adapters for that uses the same thread for both I/O and application-level
  * callbacks. For synchronous calls this is the application thread making the request; for
  * asynchronous calls this is a thread provided by OkHttp's dispatcher.
  */
-final class DefaultCallAdapterFactory extends CallAdapter.Factory {
-  static final CallAdapter.Factory INSTANCE = new DefaultCallAdapterFactory();
+public final class DefaultCallAdapterFactory extends CallAdapter.Factory {
+  public static final CallAdapter.Factory INSTANCE = new DefaultCallAdapterFactory();
 
   @Override
   public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Renovate retrofit) {
