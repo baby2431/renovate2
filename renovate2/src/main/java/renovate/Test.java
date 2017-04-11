@@ -7,9 +7,12 @@ import renovate.call.Call;
  * Created by xmmc on 2017/4/10.
  */
 
-public interface Test {
+public class Test {
 
-    Call<ResponseBody> call();
+    Call<Object> call(){
+
+        return null;
+    }
 
 
 }

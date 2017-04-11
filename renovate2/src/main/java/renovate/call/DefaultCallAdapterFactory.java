@@ -35,8 +35,10 @@ public final class DefaultCallAdapterFactory extends CallAdapter.Factory {
     if (getRawType(returnType) != Call.class) {
       return null;
     }
-
+//    returnType = renovate.call.Call<okhttp3.ResponseBody>
+    //根据返回值类型 得到对应的响应体类型
     final Type responseType = Utils.getCallResponseType(returnType);
+//   responseType =  class okhttp3.ResponseBody
     return new CallAdapter<Object, Call<?>>() {
       @Override public Type responseType() {
         return responseType;

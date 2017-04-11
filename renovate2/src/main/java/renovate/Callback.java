@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package renovate.call;
+package renovate;
 
 
 import renovate.Renovate;
+import renovate.Response;
+import renovate.call.Call;
 
 /**
  * 这个请求放回之后的处理，两个方法当中，只有一个方法会被相应

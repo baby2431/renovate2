@@ -1,10 +1,14 @@
 import org.junit.Test;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.concurrent.CountDownLatch;
 
+import okhttp3.ResponseBody;
 import renovate.Renovate;
+import renovate.Response;
 import renovate.http.Ignore;
-import renovate.http.Params;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
  * Created by xmmc on 2017/3/29.
@@ -15,10 +19,23 @@ public class TestParser {
 
     @Test
     public void test(){
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         p.age = 123123;
         p.name="xiao wenwen";
-        Renovate renovate = new Renovate.Builder().baseUrl("http://www.baidu.com").build();
-        renovate.request(p);
+        System.out.println("current thread = "+Thread.currentThread().getName());
+        Renovate renovate = new Renovate.Builder().baseUrl("http://localhost:8080/").addConverterFactory(GsonConverterFactory.create()).build();
+
+    }
+
+    private void print(Response<ResponseBody> response) {
+        System.out.println("current thread = "+Thread.currentThread().getName());
+        System.out.println(response.toString());
+        try {
+            System.out.println(response.body().string());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println(response.message());
     }
 
     @Test

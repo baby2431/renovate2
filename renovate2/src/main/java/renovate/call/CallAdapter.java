@@ -61,7 +61,7 @@ public interface CallAdapter<R, T> {
 
   /**
    * Creates {@link CallAdapter} instances based on the return type of {@linkplain
-   * Renovate#create(Class) the service interface} methods.
+   * Renovate#hotInit(Class)} the service interface} methods.
    */
   abstract class Factory {
     /**

@@ -27,7 +27,7 @@ import static renovate.Utils.checkNotNull;
 
 
 /**
- * 参数处理器
+ * 将对象的值构建到okhttp
  * @param <T>
  */
 abstract class ParameterHandler<T> {
@@ -301,6 +301,7 @@ abstract class ParameterHandler<T> {
       }
     }
   }
+
 
   static final class Body<T> extends ParameterHandler<T> {
     private final Converter<T, RequestBody> converter;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package renovate;
+package renovate.call;
 
 import java.io.IOException;
 
@@ -24,12 +24,14 @@ import okio.Buffer;
 import okio.BufferedSource;
 import okio.ForwardingSource;
 import okio.Okio;
-import renovate.call.Call;
-import renovate.call.Callback;
-import renovate.call.Response;
+import renovate.Callback;
+import renovate.ObjectParser;
+import renovate.Response;
+import renovate.Utils;
 
-final class OkHttpCall<T> implements Call<T> {
-  private final ObjectParser<T, ?> serviceMethod;
+//// FIXME: 2017/4/11
+public final class OkHttpCall<T> implements Call<T> {
+  private final ObjectParser<T, ?> objectParser;
   private final Object args;
 
   private volatile boolean canceled;
@@ -39,14 +41,14 @@ final class OkHttpCall<T> implements Call<T> {
   private Throwable creationFailure; // Either a RuntimeException or IOException.
   private boolean executed;
 
-  OkHttpCall(ObjectParser<T, ?> serviceMethod, Object args) {
-    this.serviceMethod = serviceMethod;
+  public OkHttpCall(ObjectParser<T, ?> objectParser, Object args) {
+    this.objectParser = objectParser;
     this.args = args;
   }
 
   @SuppressWarnings("CloneDoesntCallSuperClone") // We are a final type & this saves clearing state.
   @Override public OkHttpCall<T> clone() {
-    return new OkHttpCall<>(serviceMethod, args);
+    return new OkHttpCall(objectParser, args);
   }
 
   @Override public synchronized Request request() {
@@ -179,8 +181,8 @@ final class OkHttpCall<T> implements Call<T> {
   }
 
   private okhttp3.Call createRawCall() throws IOException {
-    Request request = serviceMethod.toRequest(args);
-    okhttp3.Call call = serviceMethod.callFactory.newCall(request);
+    Request request = objectParser.toRequest(args);
+    okhttp3.Call call = objectParser.getCallFactory().newCall(request);
     if (call == null) {
       throw new NullPointerException("Call.Factory returned null.");
     }
@@ -213,7 +215,7 @@ final class OkHttpCall<T> implements Call<T> {
 
     ExceptionCatchingRequestBody catchingBody = new ExceptionCatchingRequestBody(rawBody);
     try {
-      T body = serviceMethod.toResponse(catchingBody);
+      T body = objectParser.toResponse(catchingBody);
       return Response.success(body, rawResponse);
     } catch (RuntimeException e) {
       // If the underlying source threw an exception, propagate that rather than indicating it was

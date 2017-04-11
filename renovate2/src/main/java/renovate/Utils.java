@@ -298,8 +298,8 @@ public final class Utils {
     }
     return false;
   }
-
-  static ResponseBody buffer(final ResponseBody body) throws IOException {
+  // FIXME: 2017/4/11 访问属性
+  public static ResponseBody buffer(final ResponseBody body) throws IOException {
     Buffer buffer = new Buffer();
     body.source().readAll(buffer);
     return ResponseBody.create(body.contentType(), body.contentLength(), buffer);

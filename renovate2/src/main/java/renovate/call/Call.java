@@ -19,6 +19,8 @@ import java.io.IOException;
 
 
 import okhttp3.Request;
+import renovate.Callback;
+import renovate.Response;
 
 /**
  * An invocation of a Renovate method that sends a request to a webserver and returns a response.

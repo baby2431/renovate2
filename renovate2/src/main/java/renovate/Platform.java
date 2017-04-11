@@ -41,7 +41,7 @@ class Platform {
     } catch (ClassNotFoundException ignored) {
     }
     try {
-      Class.forName("java.util.Optional");
+      Class.forName("");
       return new Java8();
     } catch (ClassNotFoundException ignored) {
     }

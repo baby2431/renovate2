@@ -21,10 +21,7 @@ import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
-import renovate.call.Call;
 import renovate.call.CallAdapter;
-import renovate.call.Callback;
-import renovate.call.Response;
 import renovate.http.Body;
 import renovate.http.FormUrlEncoded;
 import renovate.http.HTTP;
@@ -32,6 +29,8 @@ import renovate.http.Header;
 import renovate.http.HeaderMap;
 import renovate.http.Ignore;
 import renovate.http.Multipart;
+import renovate.http.Params;
+import renovate.http.ParamsMap;
 import renovate.http.Part;
 import renovate.http.PartMap;
 import renovate.http.Path;
@@ -49,7 +48,7 @@ public class ObjectParser<R, T> {
     static final String PARAM = "[a-zA-Z][a-zA-Z0-9_-]*";
     static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
     static final Pattern PARAM_NAME_REGEX = Pattern.compile(PARAM);
-
+    // FIXME: 2017/4/11 pojo
     final okhttp3.Call.Factory callFactory;
     final CallAdapter<R, T> callAdapter;
 
@@ -78,11 +77,11 @@ public class ObjectParser<R, T> {
         this.isMultipart = builder.isMultipart;
         this.fieldParameterHandlerMap = builder.fieldParameterHandlerMap;
     }
+    // FIXME: 2017/4/11 访问属性
     /** Builds an HTTP request from method arguments. */
-    Request toRequest(Object args) throws IOException {
+    public Request toRequest(Object args) throws IOException {
         OKHttpRequestBuilder requestBuilder = new OKHttpRequestBuilder(httpMethod, baseUrl, relativeUrl, headers,
                 contentType, hasBody, isFormEncoded, isMultipart);
-
 
         //FIXME
 //        int argumentCount = args != null ? args. : 0;
@@ -106,13 +105,17 @@ public class ObjectParser<R, T> {
             e.printStackTrace();
         }
 
-
-
         return requestBuilder.build();
     }
 
+    public okhttp3.Call.Factory getCallFactory(){
+        return callFactory;
+    }
+
+
     /** Builds a method return value from an HTTP response body. */
-    R toResponse(ResponseBody body) throws IOException {
+    // FIXME: 2017/4/11 访问属性
+    public R toResponse(ResponseBody body) throws IOException {
         return responseConverter.convert(body);
     }
     static final class Builder<T, R>  {
@@ -160,7 +163,7 @@ public class ObjectParser<R, T> {
             callAdapter = createCallAdapter();
             responseType = callAdapter.responseType();
             if (responseType == Response.class || responseType == okhttp3.Response.class) {
-                throw methodError("'"
+                throw objectError("'"
                         + Utils.getRawType(responseType).getName()
                         + "' is not a valid response body type. Did you mean ResponseBody?");
             }
@@ -169,15 +172,15 @@ public class ObjectParser<R, T> {
                 parseHttpAnnotation(annotation);
             }
             if (httpMethod == null) {
-                throw methodError("HTTP method annotation is required (e.g., @GET, @POST, etc.).");
+                throw objectError("HTTP method annotation is required (e.g., @GET, @POST, etc.).");
             }
             if (!hasBody) {
                 if (isMultipart) {
-                    throw methodError(
+                    throw objectError(
                             "Multipart can only be specified on HTTP methods with request body (e.g., @POST).");
                 }
                 if (isFormEncoded) {
-                    throw methodError("FormUrlEncoded can only be specified on HTTP methods with "
+                    throw objectError("FormUrlEncoded can only be specified on HTTP methods with "
                             + "request body (e.g., @POST).");
                 }
             }
@@ -205,16 +208,16 @@ public class ObjectParser<R, T> {
                 fieldParameterHandlerMap.put(field,parseParameter(p, field.getType(), annotations,field));
             }
             if (relativeUrl == null && !gotUrl) {
-                throw methodError("Missing either @%s URL or @Url parameter.", httpMethod);
+                throw objectError("Missing either @%s URL or @Url parameter.", httpMethod);
             }
             if (!isFormEncoded && !isMultipart && !hasBody && gotBody) {
-                throw methodError("Non-body HTTP method cannot contain @Body.");
+                throw objectError("Non-body HTTP method cannot contain @Body.");
             }
             if (isFormEncoded && !gotField) {
-                throw methodError("Form-encoded method must contain at least one @Params.");
+                throw objectError("Form-encoded method must contain at least one @Params.");
             }
             if (isMultipart && !gotPart) {
-                throw methodError("Multipart method must contain at least one @Part.");
+                throw objectError("Multipart method must contain at least one @Part.");
             }
 
             return new ObjectParser(this);
@@ -254,14 +257,14 @@ public class ObjectParser<R, T> {
             try {
                 return renovate.responseBodyConverter(responseType, annotations);
             } catch (RuntimeException e) { // Wide exception range because factories are user code.
-                throw methodError(e, "Unable to create converter for %s", responseType);
+                throw objectError(e, "Unable to create converter for %s", responseType);
             }
         }
 
-        private CallAdapter<T, R> createCallAdapter() {
-
-
+        //// FIXME: 2017/4/11
+        public CallAdapter<T, R> createCallAdapter() {
             Type returnType = null;//method.getGenericReturnType();
+            //// FIXME: 2017/4/11
             Method method = null;
             try {
                 method = Test.class.getMethod("call");
@@ -270,18 +273,18 @@ public class ObjectParser<R, T> {
                 e.printStackTrace();
             }
             if (Utils.hasUnresolvableType(returnType)) {
-                throw methodError(
+                throw objectError(
                         "Method return type must not include a type variable or wildcard: %s", returnType);
             }
             if (returnType == void.class) {
-                throw methodError("Service methods cannot return void.");
+                throw objectError("Service methods cannot return void.");
             }
             Annotation[] annotations = method.getAnnotations();
             try {
                 //noinspection unchecked
                 return (CallAdapter<T, R>) renovate.callAdapter(returnType, annotations);
             } catch (RuntimeException e) { // Wide exception range because factories are user code.
-                throw methodError(e, "Unable to create call adapter for %s", returnType);
+                throw objectError(e, "Unable to create call adapter for %s", returnType);
             }
         }
         private ParameterHandler<?> parseParameterAnnotation(
@@ -466,11 +469,11 @@ public class ObjectParser<R, T> {
 
                 return new ParameterHandler.HeaderMap<>(valueConverter);
 
-            } else if (annotation instanceof renovate.http.Params) {
+            } else if (annotation instanceof Params) {
                 if (!isFormEncoded) {
                     throw parameterError(p, "@Params parameters can only be used with form encoding.");
                 }
-                renovate.http.Params params = (renovate.http.Params) annotation;
+                Params params = (Params) annotation;
                 String name = params.value();
                 boolean encoded = params.encoded();
                 if("".equals(name)){
@@ -502,7 +505,7 @@ public class ObjectParser<R, T> {
                     return new ParameterHandler.Params<>(name, converter, encoded);
                 }
 
-            } else if (annotation instanceof renovate.http.ParamsMap) {
+            } else if (annotation instanceof ParamsMap) {
                 if (!isFormEncoded) {
                     throw parameterError(p, "@ParamsMap parameters can only be used with form encoding.");
                 }
@@ -525,7 +528,7 @@ public class ObjectParser<R, T> {
                         renovate.stringConverter(valueType, annotations);
 
                 gotField = true;
-                return new ParameterHandler.ParamsMap<>(valueConverter, ((renovate.http.ParamsMap) annotation).encoded());
+                return new ParameterHandler.ParamsMap<>(valueConverter, ((ParamsMap) annotation).encoded());
 
             } else if (annotation instanceof Part) {
                 if (!isMultipart) {
@@ -534,7 +537,7 @@ public class ObjectParser<R, T> {
                 Part part = (Part) annotation;
                 gotPart = true;
 
-                //// FIXME: 2017/4/10 
+                //// FIXME: 2017/4/10
                 String partName = part.value();
                 if("".equals(partName)){
                     partName = field.getName();
@@ -680,31 +683,35 @@ public class ObjectParser<R, T> {
             }
         }
 
+        /** 解析 link{ renovate.Http}
+         * @param annotation
+         */
         private void parseHttpAnnotation(Annotation annotation) {
             if (annotation instanceof HTTP) {
                 HTTP http = (HTTP) annotation;
                 parseHttpMethodAndPath(http.method().name(), http.path(), http.hasBody());
             } else if (annotation instanceof renovate.http.Headers) {
-                //// FIXME: 2017/4/10
+                //// FIXME: 2017/4/10 具体设计方式不明，headers
                 String[] headersToParse = ((renovate.http.Headers) annotation).value();
                 if (headersToParse.length == 0) {
-                    throw methodError("@Headers annotation is empty.");
+                    throw objectError("@Headers annotation is empty.");
                 }
                 headers = parseHeaders(headersToParse);
             } else if (annotation instanceof Multipart) {
                 if (isFormEncoded) {
-                    throw methodError("Only one encoding annotation is allowed.");
+                    throw objectError("Only one encoding annotation is allowed.");
                 }
                 isMultipart = true;
             } else if (annotation instanceof FormUrlEncoded) {
                 if (isMultipart) {
-                    throw methodError("Only one encoding annotation is allowed.");
+                    throw objectError("Only one encoding annotation is allowed.");
                 }
                 isFormEncoded = true;
             }
         }
 
         /**
+         * 设置Http的方法和路径
          * 设置请求方法和请求方式 获取到url当中的参数
          *
          * @param httpMethod
@@ -713,7 +720,7 @@ public class ObjectParser<R, T> {
          */
         private void parseHttpMethodAndPath(String httpMethod, String value, boolean hasBody) {
             if (this.httpMethod != null) {
-                throw methodError("Only one HTTP method is allowed. Found: %s and %s.",
+                throw objectError("Only one HTTP method is allowed. Found: %s and %s.",
                         this.httpMethod, httpMethod);
             }
             this.httpMethod = httpMethod;
@@ -728,7 +735,7 @@ public class ObjectParser<R, T> {
                 String queryParams = value.substring(question + 1);
                 Matcher queryParamMatcher = PARAM_URL_REGEX.matcher(queryParams);
                 if (queryParamMatcher.find()) {
-                    throw methodError("URL query string \"%s\" must not have replace block. "
+                    throw objectError("URL query string \"%s\" must not have replace block. "
                             + "For dynamic query parameters use @Query.", queryParams);
                 }
             }
@@ -752,12 +759,16 @@ public class ObjectParser<R, T> {
         }
 
 
+        /** 解析头部
+         * @param headers
+         * @return
+         */
         private Headers parseHeaders(String[] headers) {
             Headers.Builder builder = new Headers.Builder();
             for (String header : headers) {
                 int colon = header.indexOf(':');
                 if (colon == -1 || colon == 0 || colon == header.length() - 1) {
-                    throw methodError(
+                    throw objectError(
                             "@Headers value must be in the form \"Name: Value\". Found: \"%s\"", header);
                 }
                 String headerName = header.substring(0, colon);
@@ -765,7 +776,7 @@ public class ObjectParser<R, T> {
                 if ("Content-Type".equalsIgnoreCase(headerName)) {
                     MediaType type = MediaType.parse(headerValue);
                     if (type == null) {
-                        throw methodError("Malformed content type: %s", headerValue);
+                        throw objectError("Malformed content type: %s", headerValue);
                     }
                     contentType = type;
                 } else {
@@ -775,14 +786,14 @@ public class ObjectParser<R, T> {
             return builder.build();
         }
 
-        private RuntimeException methodError(String message, Object... args) {
-            return methodError(null, message, args);
+        private RuntimeException objectError(String message, Object... args) {
+            return objectError(null, message, args);
         }
 
-        private RuntimeException methodError(Throwable cause, String message, Object... args) {
+        private RuntimeException objectError(Throwable cause, String message, Object... args) {
             message = String.format(message, args);
             return new IllegalArgumentException(message
-                    + "\n    for method "
+                    + "\n    for object "
                     + clazz.getSimpleName()
                     + "."
                     + clazz.getName(), cause);
@@ -790,11 +801,11 @@ public class ObjectParser<R, T> {
 
         private RuntimeException parameterError(
                 Throwable cause, int p, String message, Object... args) {
-            return methodError(cause, message + " (parameter #" + (p + 1) + ")", args);
+            return objectError(cause, message + " (field #" + (p + 1) + ")", args);
         }
 
         private RuntimeException parameterError(int p, String message, Object... args) {
-            return methodError(message + " (parameter #" + (p + 1) + ")", args);
+            return objectError(message + " (field #" + (p + 1) + ")", args);
         }
 
 

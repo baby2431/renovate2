@@ -57,7 +57,7 @@ public interface Converter<F, T> {
     /**
      * Returns a {@link Converter} for converting {@code type} to a {@link String}, or null if
      * {@code type} cannot be handled by this factory. This is used to create converters for types
-     * specified by {@link renovate.http.Field @Params}, {@link renovate.http.FieldMap @ParamsMap} values,
+     * specified by {@link renovate.http.Params @Params}, {@link renovate.http.ParamsMap @ParamsMap} values,
      * {@link renovate.http.Header @Header}, {@link renovate.http.HeaderMap @HeaderMap}, {@link renovate.http.Path @Path},
      * {@link renovate.http.Query @Query}, and {@link renovate.http.QueryMap @QueryMap} values.
      */

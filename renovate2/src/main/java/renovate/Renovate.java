@@ -7,6 +7,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
@@ -16,8 +17,7 @@ import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import renovate.call.Call;
 import renovate.call.CallAdapter;
-import renovate.call.Callback;
-import renovate.call.Response;
+import renovate.call.OkHttpCall;
 
 import static java.util.Collections.unmodifiableList;
 import static renovate.Utils.checkNotNull;
@@ -36,6 +36,10 @@ public class Renovate {
     List<CallAdapter.Factory> adapterFactories;
     Executor callbackExecutor;
     boolean validateEagerly;
+
+    WeakHashMap<Class, ObjectParser> clazzOP = new WeakHashMap<>();
+
+
     Renovate(okhttp3.Call.Factory callFactory, HttpUrl baseUrl,
              List<Converter.Factory> converterFactories, List<CallAdapter.Factory> adapterFactories,
              Executor callbackExecutor, boolean validateEagerly) {
@@ -46,6 +50,7 @@ public class Renovate {
         this.callbackExecutor = callbackExecutor;
         this.validateEagerly = validateEagerly;
     }
+
     /**
      * The factory used to create {@linkplain okhttp3.Call OkHttp calls} for sending a HTTP requests.
      * Typically an instance of {@link OkHttpClient}.
@@ -54,22 +59,24 @@ public class Renovate {
         return callFactory;
     }
 
-    public Object request(Object object) {
-        ObjectParser objectParser = new ObjectParser.Builder<>(this,object).build();
-        OkHttpCall<Object> okHttpCall = new OkHttpCall<>(objectParser, object);
-         objectParser.callAdapter.adapt(okHttpCall);
-        okHttpCall.enqueue(new Callback<Object>() {
-            @Override
-            public void onResponse(Call<Object> call, Response<Object> response) {
+    public void hotInit(Object object){
+        initObject(object);
+    }
 
-            }
+    public <T> Call<?> request(Object object,Class<T> t) {
+        ObjectParser objectParser = initObject(object);
+        OkHttpCall<?> okHttpCall = new OkHttpCall<>(clazzOP.get(object.getClass()), object);
+        objectParser.callAdapter.adapt(okHttpCall);
+        return okHttpCall;
+    }
 
-            @Override
-            public void onFailure(Call<Object> call, Throwable t) {
-
-            }
-        });
-        return null;
+    private ObjectParser initObject(Object object){
+        ObjectParser objectParser= clazzOP.get(object.getClass());
+        if (objectParser == null) {
+            objectParser = new ObjectParser.Builder<>(this, object).build();
+            clazzOP.put(object.getClass(),objectParser);
+        }
+        return objectParser;
     }
 
     /**
@@ -101,6 +108,7 @@ public class Renovate {
     }
 
     /**
+     * 获取到要用到的请求适配器
      * Returns the {@link CallAdapter} for {@code returnType} from the available {@linkplain
      * #callAdapterFactories() factories}.
      *
@@ -109,7 +117,6 @@ public class Renovate {
     public CallAdapter<?, ?> callAdapter(Type returnType, Annotation[] annotations) {
         return nextCallAdapter(null, returnType, annotations);
     }
-
 
 
     /**
@@ -125,6 +132,7 @@ public class Renovate {
 
         int start = adapterFactories.indexOf(skipPast) + 1;
         for (int i = start, count = adapterFactories.size(); i < count; i++) {
+            //通过注解和返回值类型 返回对应的请求适配器
             CallAdapter<?, ?> adapter = adapterFactories.get(i).get(returnType, annotations, this);
             if (adapter != null) {
                 return adapter;
@@ -147,6 +155,7 @@ public class Renovate {
         }
         throw new IllegalArgumentException(builder.toString());
     }
+
     /**
      * Returns a {@link Converter} for {@link ResponseBody} to {@code type} from the available
      * {@linkplain #converterFactories() factories} except {@code skipPast}.
@@ -195,6 +204,7 @@ public class Renovate {
                                                               Annotation[] parameterAnnotations, Annotation[] methodAnnotations) {
         return nextRequestBodyConverter(null, type, parameterAnnotations, methodAnnotations);
     }
+
     /**
      * Returns a {@link Converter} for {@code type} to {@link RequestBody} from the available
      * {@linkplain #converterFactories() factories} except {@code skipPast}.
@@ -234,7 +244,10 @@ public class Renovate {
         }
         throw new IllegalArgumentException(builder.toString());
     }
-    /** The API base URL. */
+
+    /**
+     * The API base URL.
+     */
     public HttpUrl baseUrl() {
         return baseUrl;
     }
@@ -260,6 +273,7 @@ public class Renovate {
         //noinspection unchecked
         return (Converter<T, String>) BuiltInConverters.ToStringConverter.INSTANCE;
     }
+
     /**
      * Build a new {@link Renovate}.
      * <p>
@@ -274,6 +288,7 @@ public class Renovate {
         private final List<CallAdapter.Factory> adapterFactories = new ArrayList<>();
         private Executor callbackExecutor;
         private boolean validateEagerly;
+
         Builder(Platform platform) {
             this.platform = platform;
             // Add the built-in converter factory first. This prevents overriding its behavior but also
@@ -323,6 +338,9 @@ public class Renovate {
          */
         public Builder baseUrl(String baseUrl) {
             checkNotNull(baseUrl, "baseUrl == null");
+            if (!baseUrl.endsWith("\\")) {
+                baseUrl += "\\";
+            }
             HttpUrl httpUrl = HttpUrl.parse(baseUrl);
             if (httpUrl == null) {
                 throw new IllegalArgumentException("Illegal URL: " + baseUrl);
@@ -341,7 +359,9 @@ public class Renovate {
             return this;
         }
 
-        /** Add converter factory for serialization and deserialization of objects. */
+        /**
+         * Add converter factory for serialization and deserialization of objects.
+         */
         public Builder addConverterFactory(Converter.Factory factory) {
             converterFactories.add(checkNotNull(factory, "factory == null"));
             return this;
