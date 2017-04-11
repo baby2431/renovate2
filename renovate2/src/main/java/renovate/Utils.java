@@ -49,7 +49,7 @@ public final class Utils {
 
       // I'm not exactly sure why getRawType() returns Type instead of Class. Neal isn't either but
       // suspects some pathological case related to nested classes exists.
-      Type rawType = parameterizedType.getRawType();
+      Type rawType = parameterizedType.getRawType(); //得到具体的类型 不带泛型和类型
       if (!(rawType instanceof Class)) throw new IllegalArgumentException();
       return (Class<?>) rawType;
     }
@@ -318,19 +318,19 @@ public final class Utils {
   }
 
   /**
-   * 得到参数的类型上限
+   * 得到参数的类型上限 通过位置，得到该参数类型上的统配类型
    * @param index
    * @param type
    * @return
      */
   public static Type getParameterUpperBound(int index, ParameterizedType type) {
     Type[] types = type.getActualTypeArguments();//返回参数数组
-    if (index < 0 || index >= types.length) {
+    if (index < 0 || index >= types.length) { //
       throw new IllegalArgumentException(
           "Index " + index + " not in range [0," + types.length + ") for " + type);
     }
     Type paramType = types[index];
-    if (paramType instanceof WildcardType) {
+    if (paramType instanceof WildcardType) { //通配类型
       return ((WildcardType) paramType).getUpperBounds()[0];
     }
     return paramType;

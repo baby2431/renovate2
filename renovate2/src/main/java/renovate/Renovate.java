@@ -17,6 +17,7 @@ import okhttp3.ResponseBody;
 import renovate.call.Call;
 import renovate.call.CallAdapter;
 import renovate.call.Callback;
+import renovate.call.Response;
 
 import static java.util.Collections.unmodifiableList;
 import static renovate.Utils.checkNotNull;
@@ -55,9 +56,20 @@ public class Renovate {
 
     public Object request(Object object) {
         ObjectParser objectParser = new ObjectParser.Builder<>(this,object).build();
+        OkHttpCall<Object> okHttpCall = new OkHttpCall<>(objectParser, object);
+         objectParser.callAdapter.adapt(okHttpCall);
+        okHttpCall.enqueue(new Callback<Object>() {
+            @Override
+            public void onResponse(Call<Object> call, Response<Object> response) {
 
-        OkHttpCall<Object> okHttpCall = new OkHttpCall<>(objectParser, args);
-        return objectParser.callAdapter.adapt(okHttpCall);
+            }
+
+            @Override
+            public void onFailure(Call<Object> call, Throwable t) {
+
+            }
+        });
+        return null;
     }
 
     /**
@@ -80,8 +92,61 @@ public class Renovate {
         return nextResponseBodyConverter(null, type, annotations);
     }
 
+    /**
+     * Returns a list of the factories tried when creating a
+     * {@linkplain #callAdapter(Type, Annotation[])} call adapter}.
+     */
+    public List<CallAdapter.Factory> callAdapterFactories() {
+        return adapterFactories;
+    }
+
+    /**
+     * Returns the {@link CallAdapter} for {@code returnType} from the available {@linkplain
+     * #callAdapterFactories() factories}.
+     *
+     * @throws IllegalArgumentException if no call adapter available for {@code type}.
+     */
+    public CallAdapter<?, ?> callAdapter(Type returnType, Annotation[] annotations) {
+        return nextCallAdapter(null, returnType, annotations);
+    }
 
 
+
+    /**
+     * Returns the {@link CallAdapter} for {@code returnType} from the available {@linkplain
+     * #callAdapterFactories() factories} except {@code skipPast}.
+     *
+     * @throws IllegalArgumentException if no call adapter available for {@code type}.
+     */
+    public CallAdapter<?, ?> nextCallAdapter(CallAdapter.Factory skipPast, Type returnType,
+                                             Annotation[] annotations) {
+        checkNotNull(returnType, "returnType == null");
+        checkNotNull(annotations, "annotations == null");
+
+        int start = adapterFactories.indexOf(skipPast) + 1;
+        for (int i = start, count = adapterFactories.size(); i < count; i++) {
+            CallAdapter<?, ?> adapter = adapterFactories.get(i).get(returnType, annotations, this);
+            if (adapter != null) {
+                return adapter;
+            }
+        }
+
+        StringBuilder builder = new StringBuilder("Could not locate call adapter for ")
+                .append(returnType)
+                .append(".\n");
+        if (skipPast != null) {
+            builder.append("  Skipped:");
+            for (int i = 0; i < start; i++) {
+                builder.append("\n   * ").append(adapterFactories.get(i).getClass().getName());
+            }
+            builder.append('\n');
+        }
+        builder.append("  Tried:");
+        for (int i = start, count = adapterFactories.size(); i < count; i++) {
+            builder.append("\n   * ").append(adapterFactories.get(i).getClass().getName());
+        }
+        throw new IllegalArgumentException(builder.toString());
+    }
     /**
      * Returns a {@link Converter} for {@link ResponseBody} to {@code type} from the available
      * {@linkplain #converterFactories() factories} except {@code skipPast}.
@@ -336,4 +401,5 @@ public class Renovate {
                     callbackExecutor, validateEagerly);
         }
     }
+
 }

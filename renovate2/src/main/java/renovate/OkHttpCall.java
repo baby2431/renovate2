@@ -24,10 +24,13 @@ import okio.Buffer;
 import okio.BufferedSource;
 import okio.ForwardingSource;
 import okio.Okio;
+import renovate.call.Call;
+import renovate.call.Callback;
+import renovate.call.Response;
 
 final class OkHttpCall<T> implements Call<T> {
   private final ObjectParser<T, ?> serviceMethod;
-  private final Object[] args;
+  private final Object args;
 
   private volatile boolean canceled;
 
@@ -36,7 +39,7 @@ final class OkHttpCall<T> implements Call<T> {
   private Throwable creationFailure; // Either a RuntimeException or IOException.
   private boolean executed;
 
-  OkHttpCall(ObjectParser<T, ?> serviceMethod, Object[] args) {
+  OkHttpCall(ObjectParser<T, ?> serviceMethod, Object args) {
     this.serviceMethod = serviceMethod;
     this.args = args;
   }
