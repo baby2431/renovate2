@@ -1,3 +1,4 @@
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -5,8 +6,10 @@ import java.lang.reflect.Field;
 import java.util.concurrent.CountDownLatch;
 
 import okhttp3.ResponseBody;
+import renovate.Callback;
 import renovate.Renovate;
 import renovate.Response;
+import renovate.call.Call;
 import renovate.http.Ignore;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -18,13 +21,27 @@ public class TestParser {
     PersonModel p = new PersonModel();
 
     @Test
-    public void test(){
+    public void test() throws InterruptedException {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         p.age = 123123;
         p.name="xiao wenwen";
         System.out.println("current thread = "+Thread.currentThread().getName());
-        Renovate renovate = new Renovate.Builder().baseUrl("http://localhost:8080/").addConverterFactory(GsonConverterFactory.create()).build();
+        Renovate renovate = new Renovate.Builder().baseUrl("http://localhost:8080/").build();
+        renovate.request(p).enqueue(new Callback() {
+            @Override
+            public void onResponse(Call call, Response response) {
+                print(response);
+                countDownLatch.countDown();
+            }
 
+            @Override
+            public void onFailure(Call call, Throwable t) {
+                t.printStackTrace();
+                countDownLatch.countDown();;
+            }
+        });
+        countDownLatch.await();
+        System.out.println("end");
     }
 
     private void print(Response<ResponseBody> response) {

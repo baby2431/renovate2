@@ -6,7 +6,7 @@ import renovate.http.Params;
 /**
  * Created by xmmc on 2017/3/29.
  */
-@HTTP(method = HTTP.Method.POST, path = "action")
+@HTTP(method = HTTP.Method.GET, path = "servlet")
 @FormUrlEncoded
 public class PersonModel {
 

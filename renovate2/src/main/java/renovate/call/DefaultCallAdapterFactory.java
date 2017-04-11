@@ -31,7 +31,7 @@ public final class DefaultCallAdapterFactory extends CallAdapter.Factory {
   public static final CallAdapter.Factory INSTANCE = new DefaultCallAdapterFactory();
 
   @Override
-  public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Renovate retrofit) {
+  public CallAdapter<?, ?> get(Type returnType, Renovate retrofit) {
     if (getRawType(returnType) != Call.class) {
       return null;
     }

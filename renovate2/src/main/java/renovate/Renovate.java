@@ -63,9 +63,9 @@ public class Renovate {
         initObject(object);
     }
 
-    public <T> Call<?> request(Object object,Class<T> t) {
+    public Call request(Object object) {
         ObjectParser objectParser = initObject(object);
-        OkHttpCall<?> okHttpCall = new OkHttpCall<>(clazzOP.get(object.getClass()), object);
+        OkHttpCall<?> okHttpCall = new OkHttpCall<>(objectParser, object);
         objectParser.callAdapter.adapt(okHttpCall);
         return okHttpCall;
     }
@@ -133,7 +133,7 @@ public class Renovate {
         int start = adapterFactories.indexOf(skipPast) + 1;
         for (int i = start, count = adapterFactories.size(); i < count; i++) {
             //通过注解和返回值类型 返回对应的请求适配器
-            CallAdapter<?, ?> adapter = adapterFactories.get(i).get(returnType, annotations, this);
+            CallAdapter<?, ?> adapter = adapterFactories.get(i).get(returnType,  this);
             if (adapter != null) {
                 return adapter;
             }

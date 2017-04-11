@@ -34,7 +34,7 @@ public final class ExecutorCallAdapterFactory extends CallAdapter.Factory {
   }
 
   @Override
-  public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Renovate renovate) {
+  public CallAdapter<?, ?> get(Type returnType,  Renovate renovate) {
     if (getRawType(returnType) != Call.class) {
       return null;
     }

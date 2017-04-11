@@ -189,7 +189,7 @@ public class ObjectParser<R, T> {
             for (int p = 0; p < parameterCount; p++) {
 //                Type parameterType = parameterTypes[p];
 //                if (Utils.hasUnresolvableType(parameterType)) {
-//                    throw parameterError(p, "Parameter type must not include a type variable or wildcard: %s",
+//                    throw objectError(p, "Parameter type must not include a type variable or wildcard: %s",
 //                            parameterType);
 //                }
 
@@ -197,7 +197,7 @@ public class ObjectParser<R, T> {
                 Annotation[] annotations = field.getDeclaredAnnotations();
                 if (annotations == null||annotations.length == 0) {
                     System.out.println(String.format("field %s no renovate annotation found",field.getName()));
-//                    throw parameterError(p, "No Retrofit annotation found.");
+//                    throw objectError(p, "No Retrofit annotation found.");
                     continue;
                 }else{
                     if(field.isAnnotationPresent(Ignore.class)){
@@ -239,14 +239,14 @@ public class ObjectParser<R, T> {
                     continue;
                 }
                 if (result != null) {
-                    throw parameterError(p, "Multiple Renovate annotations found, only one allowed.");
+                    throw objectError(p, "Multiple Renovate annotations found, only one allowed.");
                 }
                 result = annotationAction;
             }
 
             //其他的字段应该为 参数 或者是 请求体 中的内容
 //            if (result == null) {
-//                throw parameterError(p, "No Retrofit annotation found.");
+//                throw objectError(p, "No Retrofit annotation found.");
 //            }
 
             return result;
@@ -291,16 +291,16 @@ public class ObjectParser<R, T> {
                 int p, Type type, Annotation[] annotations, Annotation annotation,Field field) {
             if (annotation instanceof Url) {
                 if (gotUrl) {
-                    throw parameterError(p, "Multiple @Url method annotations found.");
+                    throw objectError(p, "Multiple @Url method annotations found.");
                 }
                 if (gotPath) {
-                    throw parameterError(p, "@Path parameters may not be used with @Url.");
+                    throw objectError(p, "@Path parameters may not be used with @Url.");
                 }
                 if (gotQuery) {
-                    throw parameterError(p, "A @Url parameter must not come after a @Query");
+                    throw objectError(p, "A @Url parameter must not come after a @Query");
                 }
                 if (relativeUrl != null) {
-                    throw parameterError(p, "@Url cannot be used with @%s URL", httpMethod);
+                    throw objectError(p, "@Url cannot be used with @%s URL", httpMethod);
                 }
 
                 gotUrl = true;
@@ -311,19 +311,19 @@ public class ObjectParser<R, T> {
                         || (type instanceof Class && "android.net.Uri".equals(((Class<?>) type).getName()))) {
                     return new ParameterHandler.RelativeUrl();
                 } else {
-                    throw parameterError(p,
+                    throw objectError(p,
                             "@Url must be okhttp3.HttpUrl, String, java.net.URI, or android.net.Uri type.");
                 }
 
             } else if (annotation instanceof Path) {
                 if (gotQuery) {
-                    throw parameterError(p, "A @Path parameter must not come after a @Query.");
+                    throw objectError(p, "A @Path parameter must not come after a @Query.");
                 }
                 if (gotUrl) {
-                    throw parameterError(p, "@Path parameters may not be used with @Url.");
+                    throw objectError(p, "@Path parameters may not be used with @Url.");
                 }
                 if (relativeUrl == null) {
-                    throw parameterError(p, "@Path can only be used with relative url on @%s", httpMethod);
+                    throw objectError(p, "@Path can only be used with relative url on @%s", httpMethod);
                 }
                 gotPath = true;
 
@@ -349,7 +349,7 @@ public class ObjectParser<R, T> {
                 gotQuery = true;
                 if (Iterable.class.isAssignableFrom(rawParameterType)) {
                     if (!(type instanceof ParameterizedType)) {
-                        throw parameterError(p, rawParameterType.getSimpleName()
+                        throw objectError(p, rawParameterType.getSimpleName()
                                 + " must include generic type (e.g., "
                                 + rawParameterType.getSimpleName()
                                 + "<String>)");
@@ -378,7 +378,7 @@ public class ObjectParser<R, T> {
                 gotQuery = true;
                 if (Iterable.class.isAssignableFrom(rawParameterType)) {
                     if (!(type instanceof ParameterizedType)) {
-                        throw parameterError(p, rawParameterType.getSimpleName()
+                        throw objectError(p, rawParameterType.getSimpleName()
                                 + " must include generic type (e.g., "
                                 + rawParameterType.getSimpleName()
                                 + "<String>)");
@@ -402,16 +402,16 @@ public class ObjectParser<R, T> {
             } else if (annotation instanceof QueryMap) {
                 Class<?> rawParameterType = Utils.getRawType(type);
                 if (!Map.class.isAssignableFrom(rawParameterType)) {
-                    throw parameterError(p, "@QueryMap parameter type must be Map.");
+                    throw objectError(p, "@QueryMap parameter type must be Map.");
                 }
                 Type mapType = Utils.getSupertype(type, rawParameterType, Map.class);
                 if (!(mapType instanceof ParameterizedType)) {
-                    throw parameterError(p, "Map must include generic types (e.g., Map<String, String>)");
+                    throw objectError(p, "Map must include generic types (e.g., Map<String, String>)");
                 }
                 ParameterizedType parameterizedType = (ParameterizedType) mapType;
                 Type keyType = Utils.getParameterUpperBound(0, parameterizedType);
                 if (String.class != keyType) {
-                    throw parameterError(p, "@QueryMap keys must be of type String: " + keyType);
+                    throw objectError(p, "@QueryMap keys must be of type String: " + keyType);
                 }
                 Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
                 Converter<?, String> valueConverter =
@@ -428,7 +428,7 @@ public class ObjectParser<R, T> {
                 Class<?> rawParameterType = Utils.getRawType(type);
                 if (Iterable.class.isAssignableFrom(rawParameterType)) {
                     if (!(type instanceof ParameterizedType)) {
-                        throw parameterError(p, rawParameterType.getSimpleName()
+                        throw objectError(p, rawParameterType.getSimpleName()
                                 + " must include generic type (e.g., "
                                 + rawParameterType.getSimpleName()
                                 + "<String>)");
@@ -452,16 +452,16 @@ public class ObjectParser<R, T> {
             } else if (annotation instanceof HeaderMap) {
                 Class<?> rawParameterType = Utils.getRawType(type);
                 if (!Map.class.isAssignableFrom(rawParameterType)) {
-                    throw parameterError(p, "@HeaderMap parameter type must be Map.");
+                    throw objectError(p, "@HeaderMap parameter type must be Map.");
                 }
                 Type mapType = Utils.getSupertype(type, rawParameterType, Map.class);
                 if (!(mapType instanceof ParameterizedType)) {
-                    throw parameterError(p, "Map must include generic types (e.g., Map<String, String>)");
+                    throw objectError(p, "Map must include generic types (e.g., Map<String, String>)");
                 }
                 ParameterizedType parameterizedType = (ParameterizedType) mapType;
                 Type keyType = Utils.getParameterUpperBound(0, parameterizedType);
                 if (String.class != keyType) {
-                    throw parameterError(p, "@HeaderMap keys must be of type String: " + keyType);
+                    throw objectError(p, "@HeaderMap keys must be of type String: " + keyType);
                 }
                 Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
                 Converter<?, String> valueConverter =
@@ -471,7 +471,7 @@ public class ObjectParser<R, T> {
 
             } else if (annotation instanceof Params) {
                 if (!isFormEncoded) {
-                    throw parameterError(p, "@Params parameters can only be used with form encoding.");
+                    throw objectError(p, "@Params parameters can only be used with form encoding.");
                 }
                 Params params = (Params) annotation;
                 String name = params.value();
@@ -484,7 +484,7 @@ public class ObjectParser<R, T> {
                 Class<?> rawParameterType = Utils.getRawType(type);
                 if (Iterable.class.isAssignableFrom(rawParameterType)) {
                     if (!(type instanceof ParameterizedType)) {
-                        throw parameterError(p, rawParameterType.getSimpleName()
+                        throw objectError(p, rawParameterType.getSimpleName()
                                 + " must include generic type (e.g., "
                                 + rawParameterType.getSimpleName()
                                 + "<String>)");
@@ -507,21 +507,21 @@ public class ObjectParser<R, T> {
 
             } else if (annotation instanceof ParamsMap) {
                 if (!isFormEncoded) {
-                    throw parameterError(p, "@ParamsMap parameters can only be used with form encoding.");
+                    throw objectError(p, "@ParamsMap parameters can only be used with form encoding.");
                 }
                 Class<?> rawParameterType = Utils.getRawType(type);
                 if (!Map.class.isAssignableFrom(rawParameterType)) {
-                    throw parameterError(p, "@ParamsMap parameter type must be Map.");
+                    throw objectError(p, "@ParamsMap parameter type must be Map.");
                 }
                 Type mapType = Utils.getSupertype(type, rawParameterType, Map.class);
                 if (!(mapType instanceof ParameterizedType)) {
-                    throw parameterError(p,
+                    throw objectError(p,
                             "Map must include generic types (e.g., Map<String, String>)");
                 }
                 ParameterizedType parameterizedType = (ParameterizedType) mapType;
                 Type keyType = Utils.getParameterUpperBound(0, parameterizedType);
                 if (String.class != keyType) {
-                    throw parameterError(p, "@ParamsMap keys must be of type String: " + keyType);
+                    throw objectError(p, "@ParamsMap keys must be of type String: " + keyType);
                 }
                 Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
                 Converter<?, String> valueConverter =
@@ -532,7 +532,7 @@ public class ObjectParser<R, T> {
 
             } else if (annotation instanceof Part) {
                 if (!isMultipart) {
-                    throw parameterError(p, "@Part parameters can only be used with multipart encoding.");
+                    throw objectError(p, "@Part parameters can only be used with multipart encoding.");
                 }
                 Part part = (Part) annotation;
                 gotPart = true;
@@ -546,7 +546,7 @@ public class ObjectParser<R, T> {
                 if (partName.isEmpty()) {
                     if (Iterable.class.isAssignableFrom(rawParameterType)) {
                         if (!(type instanceof ParameterizedType)) {
-                            throw parameterError(p, rawParameterType.getSimpleName()
+                            throw objectError(p, rawParameterType.getSimpleName()
                                     + " must include generic type (e.g., "
                                     + rawParameterType.getSimpleName()
                                     + "<String>)");
@@ -554,21 +554,21 @@ public class ObjectParser<R, T> {
                         ParameterizedType parameterizedType = (ParameterizedType) type;
                         Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
                         if (!MultipartBody.Part.class.isAssignableFrom(Utils.getRawType(iterableType))) {
-                            throw parameterError(p,
+                            throw objectError(p,
                                     "@Part annotation must supply a name or use MultipartBody.Part parameter type.");
                         }
                         return ParameterHandler.RawPart.INSTANCE.iterable();
                     } else if (rawParameterType.isArray()) {
                         Class<?> arrayComponentType = rawParameterType.getComponentType();
                         if (!MultipartBody.Part.class.isAssignableFrom(arrayComponentType)) {
-                            throw parameterError(p,
+                            throw objectError(p,
                                     "@Part annotation must supply a name or use MultipartBody.Part parameter type.");
                         }
                         return ParameterHandler.RawPart.INSTANCE.array();
                     } else if (MultipartBody.Part.class.isAssignableFrom(rawParameterType)) {
                         return ParameterHandler.RawPart.INSTANCE;
                     } else {
-                        throw parameterError(p,
+                        throw objectError(p,
                                 "@Part annotation must supply a name or use MultipartBody.Part parameter type.");
                     }
                 } else {
@@ -578,7 +578,7 @@ public class ObjectParser<R, T> {
 
                     if (Iterable.class.isAssignableFrom(rawParameterType)) {
                         if (!(type instanceof ParameterizedType)) {
-                            throw parameterError(p, rawParameterType.getSimpleName()
+                            throw objectError(p, rawParameterType.getSimpleName()
                                     + " must include generic type (e.g., "
                                     + rawParameterType.getSimpleName()
                                     + "<String>)");
@@ -586,7 +586,7 @@ public class ObjectParser<R, T> {
                         ParameterizedType parameterizedType = (ParameterizedType) type;
                         Type iterableType = Utils.getParameterUpperBound(0, parameterizedType);
                         if (MultipartBody.Part.class.isAssignableFrom(Utils.getRawType(iterableType))) {
-                            throw parameterError(p, "@Part parameters using the MultipartBody.Part must not "
+                            throw objectError(p, "@Part parameters using the MultipartBody.Part must not "
                                     + "include a part name in the annotation.");
                         }
                         Converter<?, RequestBody> converter =
@@ -595,14 +595,14 @@ public class ObjectParser<R, T> {
                     } else if (rawParameterType.isArray()) {
                         Class<?> arrayComponentType = boxIfPrimitive(rawParameterType.getComponentType());
                         if (MultipartBody.Part.class.isAssignableFrom(arrayComponentType)) {
-                            throw parameterError(p, "@Part parameters using the MultipartBody.Part must not "
+                            throw objectError(p, "@Part parameters using the MultipartBody.Part must not "
                                     + "include a part name in the annotation.");
                         }
                         Converter<?, RequestBody> converter =
                                 renovate.requestBodyConverter(arrayComponentType, annotations, new Annotation[]{annotation});
                         return new ParameterHandler.Part<>(headers, converter).array();
                     } else if (MultipartBody.Part.class.isAssignableFrom(rawParameterType)) {
-                        throw parameterError(p, "@Part parameters using the MultipartBody.Part must not "
+                        throw objectError(p, "@Part parameters using the MultipartBody.Part must not "
                                 + "include a part name in the annotation.");
                     } else {
                         Converter<?, RequestBody> converter =
@@ -613,27 +613,27 @@ public class ObjectParser<R, T> {
 
             } else if (annotation instanceof PartMap) {
                 if (!isMultipart) {
-                    throw parameterError(p, "@PartMap parameters can only be used with multipart encoding.");
+                    throw objectError(p, "@PartMap parameters can only be used with multipart encoding.");
                 }
                 gotPart = true;
                 Class<?> rawParameterType = Utils.getRawType(type);
                 if (!Map.class.isAssignableFrom(rawParameterType)) {
-                    throw parameterError(p, "@PartMap parameter type must be Map.");
+                    throw objectError(p, "@PartMap parameter type must be Map.");
                 }
                 Type mapType = Utils.getSupertype(type, rawParameterType, Map.class);
                 if (!(mapType instanceof ParameterizedType)) {
-                    throw parameterError(p, "Map must include generic types (e.g., Map<String, String>)");
+                    throw objectError(p, "Map must include generic types (e.g., Map<String, String>)");
                 }
                 ParameterizedType parameterizedType = (ParameterizedType) mapType;
 
                 Type keyType = Utils.getParameterUpperBound(0, parameterizedType);
                 if (String.class != keyType) {
-                    throw parameterError(p, "@PartMap keys must be of type String: " + keyType);
+                    throw objectError(p, "@PartMap keys must be of type String: " + keyType);
                 }
 
                 Type valueType = Utils.getParameterUpperBound(1, parameterizedType);
                 if (MultipartBody.Part.class.isAssignableFrom(Utils.getRawType(valueType))) {
-                    throw parameterError(p, "@PartMap values cannot be MultipartBody.Part. "
+                    throw objectError(p, "@PartMap values cannot be MultipartBody.Part. "
                             + "Use @Part List<Part> or a different value type instead.");
                 }
 
@@ -645,11 +645,11 @@ public class ObjectParser<R, T> {
 
             } else if (annotation instanceof Body) {
                 if (isFormEncoded || isMultipart) {
-                    throw parameterError(p,
+                    throw objectError(p,
                             "@Body parameters cannot be used with form or multi-part encoding.");
                 }
                 if (gotBody) {
-                    throw parameterError(p, "Multiple @Body method annotations found.");
+                    throw objectError(p, "Multiple @Body method annotations found.");
                 }
 
                 Converter<?, RequestBody> converter;
@@ -657,7 +657,7 @@ public class ObjectParser<R, T> {
                     converter = renovate.requestBodyConverter(type, annotations, new Annotation[]{annotation});
                 } catch (RuntimeException e) {
                     // Wide exception range because factories are user code.
-                    throw parameterError(e, p, "Unable to create @Body converter for %s", type);
+                    throw objectError(e, p, "Unable to create @Body converter for %s", type);
                 }
                 gotBody = true;
                 return new ParameterHandler.Body<>(converter);
@@ -674,12 +674,12 @@ public class ObjectParser<R, T> {
          */
         private void validatePathName(int p, String name) {
             if (!PARAM_NAME_REGEX.matcher(name).matches()) {
-                throw parameterError(p, "@Path parameter name must match %s. Found: %s",
+                throw objectError(p, "@Path parameter name must match %s. Found: %s",
                         PARAM_URL_REGEX.pattern(), name);
             }
             // Verify URL replacement name is actually present in the URL path.
             if (!relativeUrlParamNames.contains(name)) {
-                throw parameterError(p, "URL \"%s\" does not contain \"{%s}\".", relativeUrl, name);
+                throw objectError(p, "URL \"%s\" does not contain \"{%s}\".", relativeUrl, name);
             }
         }
 
@@ -799,12 +799,12 @@ public class ObjectParser<R, T> {
                     + clazz.getName(), cause);
         }
 
-        private RuntimeException parameterError(
+        private RuntimeException objectError(
                 Throwable cause, int p, String message, Object... args) {
             return objectError(cause, message + " (field #" + (p + 1) + ")", args);
         }
 
-        private RuntimeException parameterError(int p, String message, Object... args) {
+        private RuntimeException objectError(int p, String message, Object... args) {
             return objectError(message + " (field #" + (p + 1) + ")", args);
         }
 

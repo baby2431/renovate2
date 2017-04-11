@@ -10,7 +10,6 @@ public class ABCD {
 
     public void test(){
 
-        Test test = new Test();
 
 
     }
