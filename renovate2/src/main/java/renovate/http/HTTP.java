@@ -20,6 +20,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 
+import renovate.call.Call;
+
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -34,15 +36,13 @@ public @interface HTTP {
 
     String path() default "";
 
-    boolean hasBody() default false;
+    boolean hasBody() default true;
 
-
-
-    public static enum Serialize {
+    enum Serialize {
         Params, JSON, XML
     }
 
-    public static enum Method {
+    enum Method {
         GET, HEAD, DELETE,PUT,PATCH,OPTIONS,POST
     }
 }

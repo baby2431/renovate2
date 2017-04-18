@@ -61,15 +61,14 @@ public interface CallAdapter<R, T> {
 
   /**
    * Creates {@link CallAdapter} instances based on the return type of {@linkplain
-   * Renovate#create(Class) the service interface} methods.
+   * Renovate#hotInit(Class)} the service interface} methods.
    */
   abstract class Factory {
     /**
      * Returns a call adapter for interface methods that return {@code returnType}, or null if it
      * cannot be handled by this factory.
      */
-    public abstract CallAdapter<?, ?> get(Type returnType, Annotation[] annotations,
-        Renovate retrofit);
+    public abstract CallAdapter<?, ?> get(Type returnType, Renovate retrofit);
 
     /**
      * Extract the upper bound of the generic parameter at {@code index} from {@code type}. For

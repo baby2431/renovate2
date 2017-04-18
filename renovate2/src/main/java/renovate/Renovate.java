@@ -7,6 +7,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
@@ -16,7 +17,7 @@ import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import renovate.call.Call;
 import renovate.call.CallAdapter;
-import renovate.call.Callback;
+import renovate.call.OkHttpCall;
 
 import static java.util.Collections.unmodifiableList;
 import static renovate.Utils.checkNotNull;
@@ -35,6 +36,10 @@ public class Renovate {
     List<CallAdapter.Factory> adapterFactories;
     Executor callbackExecutor;
     boolean validateEagerly;
+
+    WeakHashMap<Class, ObjectParser> clazzOP = new WeakHashMap<>();
+
+
     Renovate(okhttp3.Call.Factory callFactory, HttpUrl baseUrl,
              List<Converter.Factory> converterFactories, List<CallAdapter.Factory> adapterFactories,
              Executor callbackExecutor, boolean validateEagerly) {
@@ -47,17 +52,31 @@ public class Renovate {
     }
 
     /**
-     * @param object
-     * @return
+     * The factory used to create {@linkplain okhttp3.Call OkHttp calls} for sending a HTTP requests.
+     * Typically an instance of {@link OkHttpClient}.
      */
-    public void post(Object object) {
-
-
-        request(object);
+    public okhttp3.Call.Factory callFactory() {
+        return callFactory;
     }
 
-    private void request(Object object) {
-        ObjectParser objectParser = new ObjectParser.Build(this,object).build();
+    public void hotInit(Object object){
+        initObject(object);
+    }
+
+    public Call request(Object object) {
+        ObjectParser objectParser = initObject(object);
+        OkHttpCall<?> okHttpCall = new OkHttpCall<>(objectParser, object);
+        objectParser.callAdapter.adapt(okHttpCall);
+        return okHttpCall;
+    }
+
+    private ObjectParser initObject(Object object){
+        ObjectParser objectParser= clazzOP.get(object.getClass());
+        if (objectParser == null) {
+            objectParser = new ObjectParser.Builder<>(this, object).build();
+            clazzOP.put(object.getClass(),objectParser);
+        }
+        return objectParser;
     }
 
     /**
@@ -80,7 +99,62 @@ public class Renovate {
         return nextResponseBodyConverter(null, type, annotations);
     }
 
+    /**
+     * Returns a list of the factories tried when creating a
+     * {@linkplain #callAdapter(Type, Annotation[])} call adapter}.
+     */
+    public List<CallAdapter.Factory> callAdapterFactories() {
+        return adapterFactories;
+    }
 
+    /**
+     * 获取到要用到的请求适配器
+     * Returns the {@link CallAdapter} for {@code returnType} from the available {@linkplain
+     * #callAdapterFactories() factories}.
+     *
+     * @throws IllegalArgumentException if no call adapter available for {@code type}.
+     */
+    public CallAdapter<?, ?> callAdapter(Type returnType, Annotation[] annotations) {
+        return nextCallAdapter(null, returnType, annotations);
+    }
+
+
+    /**
+     * Returns the {@link CallAdapter} for {@code returnType} from the available {@linkplain
+     * #callAdapterFactories() factories} except {@code skipPast}.
+     *
+     * @throws IllegalArgumentException if no call adapter available for {@code type}.
+     */
+    public CallAdapter<?, ?> nextCallAdapter(CallAdapter.Factory skipPast, Type returnType,
+                                             Annotation[] annotations) {
+        checkNotNull(returnType, "returnType == null");
+        checkNotNull(annotations, "annotations == null");
+
+        int start = adapterFactories.indexOf(skipPast) + 1;
+        for (int i = start, count = adapterFactories.size(); i < count; i++) {
+            //通过注解和返回值类型 返回对应的请求适配器
+            CallAdapter<?, ?> adapter = adapterFactories.get(i).get(returnType,  this);
+            if (adapter != null) {
+                return adapter;
+            }
+        }
+
+        StringBuilder builder = new StringBuilder("Could not locate call adapter for ")
+                .append(returnType)
+                .append(".\n");
+        if (skipPast != null) {
+            builder.append("  Skipped:");
+            for (int i = 0; i < start; i++) {
+                builder.append("\n   * ").append(adapterFactories.get(i).getClass().getName());
+            }
+            builder.append('\n');
+        }
+        builder.append("  Tried:");
+        for (int i = start, count = adapterFactories.size(); i < count; i++) {
+            builder.append("\n   * ").append(adapterFactories.get(i).getClass().getName());
+        }
+        throw new IllegalArgumentException(builder.toString());
+    }
 
     /**
      * Returns a {@link Converter} for {@link ResponseBody} to {@code type} from the available
@@ -130,6 +204,7 @@ public class Renovate {
                                                               Annotation[] parameterAnnotations, Annotation[] methodAnnotations) {
         return nextRequestBodyConverter(null, type, parameterAnnotations, methodAnnotations);
     }
+
     /**
      * Returns a {@link Converter} for {@code type} to {@link RequestBody} from the available
      * {@linkplain #converterFactories() factories} except {@code skipPast}.
@@ -169,7 +244,10 @@ public class Renovate {
         }
         throw new IllegalArgumentException(builder.toString());
     }
-    /** The API base URL. */
+
+    /**
+     * The API base URL.
+     */
     public HttpUrl baseUrl() {
         return baseUrl;
     }
@@ -195,6 +273,7 @@ public class Renovate {
         //noinspection unchecked
         return (Converter<T, String>) BuiltInConverters.ToStringConverter.INSTANCE;
     }
+
     /**
      * Build a new {@link Renovate}.
      * <p>
@@ -209,6 +288,7 @@ public class Renovate {
         private final List<CallAdapter.Factory> adapterFactories = new ArrayList<>();
         private Executor callbackExecutor;
         private boolean validateEagerly;
+
         Builder(Platform platform) {
             this.platform = platform;
             // Add the built-in converter factory first. This prevents overriding its behavior but also
@@ -258,6 +338,9 @@ public class Renovate {
          */
         public Builder baseUrl(String baseUrl) {
             checkNotNull(baseUrl, "baseUrl == null");
+            if (!baseUrl.endsWith("\\")) {
+                baseUrl += "\\";
+            }
             HttpUrl httpUrl = HttpUrl.parse(baseUrl);
             if (httpUrl == null) {
                 throw new IllegalArgumentException("Illegal URL: " + baseUrl);
@@ -276,7 +359,9 @@ public class Renovate {
             return this;
         }
 
-        /** Add converter factory for serialization and deserialization of objects. */
+        /**
+         * Add converter factory for serialization and deserialization of objects.
+         */
         public Builder addConverterFactory(Converter.Factory factory) {
             converterFactories.add(checkNotNull(factory, "factory == null"));
             return this;
@@ -336,4 +421,5 @@ public class Renovate {
                     callbackExecutor, validateEagerly);
         }
     }
+
 }

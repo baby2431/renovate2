@@ -26,6 +26,10 @@ import okhttp3.RequestBody;
 import static renovate.Utils.checkNotNull;
 
 
+/**
+ * 将对象的值构建到okhttp
+ * @param <T>
+ */
 abstract class ParameterHandler<T> {
   abstract void apply(OKHttpRequestBuilder builder, T value) throws IOException;
 
@@ -183,12 +187,12 @@ abstract class ParameterHandler<T> {
     }
   }
 
-  static final class Field<T> extends ParameterHandler<T> {
+  static final class Params<T> extends ParameterHandler<T> {
     private final String name;
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
 
-    Field(String name, Converter<T, String> valueConverter, boolean encoded) {
+    Params(String name, Converter<T, String> valueConverter, boolean encoded) {
       this.name = checkNotNull(name, "name == null");
       this.valueConverter = valueConverter;
       this.encoded = encoded;
@@ -200,29 +204,29 @@ abstract class ParameterHandler<T> {
     }
   }
 
-  static final class FieldMap<T> extends ParameterHandler<Map<String, T>> {
+  static final class ParamsMap<T> extends ParameterHandler<Map<String, T>> {
     private final Converter<T, String> valueConverter;
     private final boolean encoded;
 
-    FieldMap(Converter<T, String> valueConverter, boolean encoded) {
+    ParamsMap(Converter<T, String> valueConverter, boolean encoded) {
       this.valueConverter = valueConverter;
       this.encoded = encoded;
     }
 
     @Override void apply(OKHttpRequestBuilder builder, Map<String, T> value) throws IOException {
       if (value == null) {
-        throw new IllegalArgumentException("Field map was null.");
+        throw new IllegalArgumentException("Params map was null.");
       }
 
       for (Map.Entry<String, T> entry : value.entrySet()) {
         String entryKey = entry.getKey();
         if (entryKey == null) {
-          throw new IllegalArgumentException("Field map contained null key.");
+          throw new IllegalArgumentException("Params map contained null key.");
         }
         T entryValue = entry.getValue();
         if (entryValue == null) {
           throw new IllegalArgumentException(
-              "Field map contained null value for key '" + entryKey + "'.");
+              "Params map contained null value for key '" + entryKey + "'.");
         }
         builder.addFormField(entryKey, valueConverter.convert(entryValue), encoded);
       }
@@ -297,6 +301,7 @@ abstract class ParameterHandler<T> {
       }
     }
   }
+
 
   static final class Body<T> extends ParameterHandler<T> {
     private final Converter<T, RequestBody> converter;

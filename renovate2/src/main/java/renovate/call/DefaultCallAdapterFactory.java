@@ -22,6 +22,7 @@ import renovate.Renovate;
 import renovate.Utils;
 
 /**
+ * 默认的请求适配器
  * Creates call adapters for that uses the same thread for both I/O and application-level
  * callbacks. For synchronous calls this is the application thread making the request; for
  * asynchronous calls this is a thread provided by OkHttp's dispatcher.
@@ -30,12 +31,14 @@ public final class DefaultCallAdapterFactory extends CallAdapter.Factory {
   public static final CallAdapter.Factory INSTANCE = new DefaultCallAdapterFactory();
 
   @Override
-  public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Renovate retrofit) {
+  public CallAdapter<?, ?> get(Type returnType, Renovate retrofit) {
     if (getRawType(returnType) != Call.class) {
       return null;
     }
-
+//    returnType = renovate.call.Call<okhttp3.ResponseBody>
+    //根据返回值类型 得到对应的响应体类型
     final Type responseType = Utils.getCallResponseType(returnType);
+//   responseType =  class okhttp3.ResponseBody
     return new CallAdapter<Object, Call<?>>() {
       @Override public Type responseType() {
         return responseType;

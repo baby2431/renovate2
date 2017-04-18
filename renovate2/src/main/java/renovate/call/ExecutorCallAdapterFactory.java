@@ -21,7 +21,9 @@ import java.lang.reflect.Type;
 import java.util.concurrent.Executor;
 
 import okhttp3.Request;
+import renovate.Callback;
 import renovate.Renovate;
+import renovate.Response;
 import renovate.Utils;
 
 public final class ExecutorCallAdapterFactory extends CallAdapter.Factory {
@@ -32,11 +34,12 @@ public final class ExecutorCallAdapterFactory extends CallAdapter.Factory {
   }
 
   @Override
-  public CallAdapter<?, ?> get(Type returnType, Annotation[] annotations, Renovate renovate) {
+  public CallAdapter<?, ?> get(Type returnType,  Renovate renovate) {
     if (getRawType(returnType) != Call.class) {
       return null;
     }
-    final Type responseType = Utils.getCallResponseType(returnType);
+    //区别
+    final Type responseType = Utils.getCallResponseType(returnType);//区别
     return new CallAdapter<Object, Call<?>>() {
       @Override public Type responseType() {
         return responseType;
@@ -64,6 +67,7 @@ public final class ExecutorCallAdapterFactory extends CallAdapter.Factory {
         @Override public void onResponse(Call<T> call, final Response<T> response) {
           callbackExecutor.execute(new Runnable() {
             @Override public void run() {
+              //代理的方式
               if (delegate.isCanceled()) {
                 // Emulate OkHttp's behavior of throwing/delivering an IOException on cancellation.
                 callback.onFailure(ExecutorCallbackCall.this, new IOException("Canceled"));

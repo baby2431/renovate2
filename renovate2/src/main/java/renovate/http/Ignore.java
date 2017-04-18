@@ -4,14 +4,14 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-/**
- * Created by xmmc on 2017/3/24.
+/** Ignore renovate parse
+ * Created by Sirius on 2017/4/10.
  */
 @Documented
-@Target(METHOD)
+@Target(FIELD)
 @Retention(RUNTIME)
-public @interface JSON {
+public @interface Ignore {
 }
