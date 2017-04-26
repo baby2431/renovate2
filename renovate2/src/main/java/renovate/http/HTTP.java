@@ -36,7 +36,7 @@ public @interface HTTP {
 
     String path() default "";
 
-    boolean hasBody() default true;
+    boolean hasBody() default false;
 
     enum Serialize {
         Params, JSON, XML

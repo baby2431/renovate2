@@ -3,7 +3,6 @@ package renovate;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URI;
@@ -21,7 +20,6 @@ import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
-import renovate.call.CallAdapter;
 import renovate.http.Body;
 import renovate.http.FormUrlEncoded;
 import renovate.http.HTTP;
@@ -43,17 +41,14 @@ import renovate.http.Url;
  * Created by xmmc on 2017/3/24.
  */
 
-public class ObjectParser<R, T> {
+public class ObjectParser {
     // Upper and lower characters, digits, underscores, and hyphens, starting with a character.
-    static final String PARAM = "[a-zA-Z][a-zA-Z0-9_-]*";
-    static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
-    static final Pattern PARAM_NAME_REGEX = Pattern.compile(PARAM);
+    private static final String PARAM = "[a-zA-Z][a-zA-Z0-9_-]*";
+    private static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
+    private static final Pattern PARAM_NAME_REGEX = Pattern.compile(PARAM);
     // FIXME: 2017/4/11 pojo
-    final okhttp3.Call.Factory callFactory;
-    final CallAdapter<R, T> callAdapter;
-
+    private okhttp3.Call.Factory callFactory;
     private final HttpUrl baseUrl;
-    private final Converter<ResponseBody, R> responseConverter;
     private final String httpMethod;
     private final String relativeUrl;
     private final Headers headers;
@@ -61,13 +56,12 @@ public class ObjectParser<R, T> {
     private final boolean hasBody;
     private final boolean isFormEncoded;
     private final boolean isMultipart;
-    Map<Field,ParameterHandler> fieldParameterHandlerMap = new HashMap<>();
+    Map<Field, ParameterHandler> fieldParameterHandlerMap = new HashMap<>();
+    Class clazz;
 
-    ObjectParser(Builder<R, T> builder) {
+    ObjectParser(Builder builder) {
         this.callFactory = builder.renovate.callFactory();
-        this.callAdapter = builder.callAdapter;
         this.baseUrl = builder.renovate.baseUrl();
-        this.responseConverter = builder.responseConverter;
         this.httpMethod = builder.httpMethod;
         this.relativeUrl = builder.relativeUrl;
         this.headers = builder.headers;
@@ -76,24 +70,25 @@ public class ObjectParser<R, T> {
         this.isFormEncoded = builder.isFormEncoded;
         this.isMultipart = builder.isMultipart;
         this.fieldParameterHandlerMap = builder.fieldParameterHandlerMap;
+        this.clazz = builder.clazz;
     }
     // FIXME: 2017/4/11 访问属性
-    /** Builds an HTTP request from method arguments. */
+
+    public Annotation[] getAnnotations(){
+        return clazz.getAnnotations();
+    }
+
+    public Class getObjectClass(){
+        return clazz;
+    }
+
+
+    /**
+     * Builds an HTTP request from method arguments.
+     */
     public Request toRequest(Object args) throws IOException {
         OKHttpRequestBuilder requestBuilder = new OKHttpRequestBuilder(httpMethod, baseUrl, relativeUrl, headers,
                 contentType, hasBody, isFormEncoded, isMultipart);
-
-        //FIXME
-//        int argumentCount = args != null ? args. : 0;
-//        if (argumentCount != handlers.length) {
-//            throw new IllegalArgumentException("Argument count (" + argumentCount
-//                    + ") doesn't match expected count (" + handlers.length + ")");
-//        }
-//        String str = args.getClass().getFields();
-//        int argumentCount = args.getClass().getFields().length;
-//        for (int p = 0; p < argumentCount; p++) {
-//            handlers[p].apply(requestBuilder, args[p]);
-//        }
         try {
             //FIXME
             for (Map.Entry<Field, ParameterHandler> handlerEntry : fieldParameterHandlerMap.entrySet()) {
@@ -108,24 +103,17 @@ public class ObjectParser<R, T> {
         return requestBuilder.build();
     }
 
-    public okhttp3.Call.Factory getCallFactory(){
+    public okhttp3.Call.Factory getCallFactory() {
         return callFactory;
     }
 
 
-    /** Builds a method return value from an HTTP response body. */
-    // FIXME: 2017/4/11 访问属性
-    public R toResponse(ResponseBody body) throws IOException {
-        return responseConverter.convert(body);
-    }
-    static final class Builder<T, R>  {
+    static final class Builder {
         Renovate renovate;
         Class clazz;
         Object object;
         Annotation[] objectAnnotations;
-        java.lang.reflect.Field[] fields;
-
-        Type responseType;
+        Field[] fields;
         boolean gotField;
         boolean gotPart;
         boolean gotBody;
@@ -140,11 +128,7 @@ public class ObjectParser<R, T> {
         Headers headers;
         MediaType contentType;
         Set<String> relativeUrlParamNames;
-
-        Map<Field,ParameterHandler> fieldParameterHandlerMap = new HashMap<>();
-
-        Converter<ResponseBody, T> responseConverter;
-        CallAdapter<T, R> callAdapter;
+        Map<Field, ParameterHandler> fieldParameterHandlerMap = new HashMap<>();
 
         public Builder(Renovate renovate, Object object) {
             this.renovate = renovate;
@@ -157,17 +141,10 @@ public class ObjectParser<R, T> {
 
         /**
          * 解析对象的配置和字段
+         *
          * @return
          */
         public ObjectParser build() {
-            callAdapter = createCallAdapter();
-            responseType = callAdapter.responseType();
-            if (responseType == Response.class || responseType == okhttp3.Response.class) {
-                throw objectError("'"
-                        + Utils.getRawType(responseType).getName()
-                        + "' is not a valid response body type. Did you mean ResponseBody?");
-            }
-            responseConverter = createResponseConverter();
             for (Annotation annotation : objectAnnotations) {
                 parseHttpAnnotation(annotation);
             }
@@ -187,25 +164,16 @@ public class ObjectParser<R, T> {
 
             int parameterCount = fields.length;
             for (int p = 0; p < parameterCount; p++) {
-//                Type parameterType = parameterTypes[p];
-//                if (Utils.hasUnresolvableType(parameterType)) {
-//                    throw objectError(p, "Parameter type must not include a type variable or wildcard: %s",
-//                            parameterType);
-//                }
-
                 java.lang.reflect.Field field = fields[p];
                 Annotation[] annotations = field.getDeclaredAnnotations();
-                if (annotations == null||annotations.length == 0) {
-                    System.out.println(String.format("field %s no renovate annotation found",field.getName()));
-//                    throw objectError(p, "No Retrofit annotation found.");
+                if (annotations == null || annotations.length == 0) {
+                    System.out.println(String.format("field %s no renovate annotation found", field.getName()));
                     continue;
-                }else{
-                    if(field.isAnnotationPresent(Ignore.class)){
-                        System.out.println(String.format("field %s,%s is ignored",clazz.getName(),field.getName()));
-                        continue;
-                    }
+                } else if (field.isAnnotationPresent(Ignore.class)) {
+                    System.out.println(String.format("field %s,%s is ignored", clazz.getName(), field.getName()));
+                    continue;
                 }
-                fieldParameterHandlerMap.put(field,parseParameter(p, field.getType(), annotations,field));
+                fieldParameterHandlerMap.put(field, parseParameter(p, field.getType(), annotations, field));
             }
             if (relativeUrl == null && !gotUrl) {
                 throw objectError("Missing either @%s URL or @Url parameter.", httpMethod);
@@ -230,11 +198,11 @@ public class ObjectParser<R, T> {
          * @return
          */
         private ParameterHandler<?> parseParameter(
-                int p, Type parameterType, Annotation[] annotations,Field field) {
+                int p, Type parameterType, Annotation[] annotations, Field field) {
             ParameterHandler<?> result = null;
             for (Annotation annotation : annotations) {
-                ParameterHandler<?> annotationAction = parseParameterAnnotation(
-                        p, parameterType, annotations, annotation,field);
+                ParameterHandler<?> annotationAction = parseClassAnnotation(
+                        p, parameterType, annotations, annotation, field);
                 if (annotationAction == null) {
                     continue;
                 }
@@ -243,52 +211,12 @@ public class ObjectParser<R, T> {
                 }
                 result = annotationAction;
             }
-
-            //其他的字段应该为 参数 或者是 请求体 中的内容
-//            if (result == null) {
-//                throw objectError(p, "No Retrofit annotation found.");
-//            }
-
             return result;
         }
 
-        private Converter<ResponseBody, T> createResponseConverter() {
-            Annotation[] annotations = objectAnnotations; // method.getAnnotations();
-            try {
-                return renovate.responseBodyConverter(responseType, annotations);
-            } catch (RuntimeException e) { // Wide exception range because factories are user code.
-                throw objectError(e, "Unable to create converter for %s", responseType);
-            }
-        }
 
-        //// FIXME: 2017/4/11
-        public CallAdapter<T, R> createCallAdapter() {
-            Type returnType = null;//method.getGenericReturnType();
-            //// FIXME: 2017/4/11
-            Method method = null;
-            try {
-                method = Test.class.getMethod("call");
-                returnType = Test.class.getMethod("call").getGenericReturnType();
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            }
-            if (Utils.hasUnresolvableType(returnType)) {
-                throw objectError(
-                        "Method return type must not include a type variable or wildcard: %s", returnType);
-            }
-            if (returnType == void.class) {
-                throw objectError("Service methods cannot return void.");
-            }
-            Annotation[] annotations = method.getAnnotations();
-            try {
-                //noinspection unchecked
-                return (CallAdapter<T, R>) renovate.callAdapter(returnType, annotations);
-            } catch (RuntimeException e) { // Wide exception range because factories are user code.
-                throw objectError(e, "Unable to create call adapter for %s", returnType);
-            }
-        }
-        private ParameterHandler<?> parseParameterAnnotation(
-                int p, Type type, Annotation[] annotations, Annotation annotation,Field field) {
+        private ParameterHandler<?> parseClassAnnotation(
+                int p, Type type, Annotation[] annotations, Annotation annotation, Field field) {
             if (annotation instanceof Url) {
                 if (gotUrl) {
                     throw objectError(p, "Multiple @Url method annotations found.");
@@ -329,7 +257,7 @@ public class ObjectParser<R, T> {
 
                 Path path = (Path) annotation;
                 String name = path.value();
-                if("".equals(name)){
+                if ("".equals(name)) {
                     name = field.getName();
                 }
                 validatePathName(p, name);
@@ -340,7 +268,7 @@ public class ObjectParser<R, T> {
             } else if (annotation instanceof Query) {
                 Query query = (Query) annotation;
                 String name = query.value();
-                if("".equals(name)){
+                if ("".equals(name)) {
                     name = field.getName();
                 }
                 boolean encoded = query.encoded();
@@ -422,7 +350,7 @@ public class ObjectParser<R, T> {
             } else if (annotation instanceof Header) {
                 Header header = (Header) annotation;
                 String name = header.value();
-                if("".equals(name)){
+                if ("".equals(name)) {
                     name = field.getName();
                 }
                 Class<?> rawParameterType = Utils.getRawType(type);
@@ -476,7 +404,7 @@ public class ObjectParser<R, T> {
                 Params params = (Params) annotation;
                 String name = params.value();
                 boolean encoded = params.encoded();
-                if("".equals(name)){
+                if ("".equals(name)) {
                     name = field.getName();
                 }
                 gotField = true;
@@ -539,7 +467,7 @@ public class ObjectParser<R, T> {
 
                 //// FIXME: 2017/4/10
                 String partName = part.value();
-                if("".equals(partName)){
+                if ("".equals(partName)) {
                     partName = field.getName();
                 }
                 Class<?> rawParameterType = Utils.getRawType(type);
@@ -669,6 +597,7 @@ public class ObjectParser<R, T> {
 
         /**
          * 效验跟路径当中的restful匹配
+         *
          * @param p
          * @param name
          */
@@ -683,7 +612,9 @@ public class ObjectParser<R, T> {
             }
         }
 
-        /** 解析 link{ renovate.Http}
+        /**
+         * 解析 link{ renovate.Http}
+         *
          * @param annotation
          */
         private void parseHttpAnnotation(Annotation annotation) {
@@ -759,7 +690,9 @@ public class ObjectParser<R, T> {
         }
 
 
-        /** 解析头部
+        /**
+         * 解析头部
+         *
          * @param headers
          * @return
          */

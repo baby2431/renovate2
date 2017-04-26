@@ -24,14 +24,11 @@ import okio.Buffer;
 import okio.BufferedSource;
 import okio.ForwardingSource;
 import okio.Okio;
-import renovate.Callback;
-import renovate.ObjectParser;
-import renovate.Response;
-import renovate.Utils;
+import renovate.*;
 
 //// FIXME: 2017/4/11
 public final class OkHttpCall<T> implements Call<T> {
-  private final ObjectParser<T, ?> objectParser;
+  private final ObjectParser objectParser;
   private final Object args;
 
   private volatile boolean canceled;
@@ -40,15 +37,17 @@ public final class OkHttpCall<T> implements Call<T> {
   private okhttp3.Call rawCall;
   private Throwable creationFailure; // Either a RuntimeException or IOException.
   private boolean executed;
+  private Converter<ResponseBody, T> responseConverter;
 
-  public OkHttpCall(ObjectParser<T, ?> objectParser, Object args) {
+  public OkHttpCall(ObjectParser objectParser, Object args,Converter<ResponseBody, T> responseConverter) {
     this.objectParser = objectParser;
     this.args = args;
+    this.responseConverter = responseConverter;
   }
 
   @SuppressWarnings("CloneDoesntCallSuperClone") // We are a final type & this saves clearing state.
   @Override public OkHttpCall<T> clone() {
-    return new OkHttpCall(objectParser, args);
+    return new OkHttpCall<T>(objectParser, args,responseConverter);
   }
 
   @Override public synchronized Request request() {
@@ -215,7 +214,7 @@ public final class OkHttpCall<T> implements Call<T> {
 
     ExceptionCatchingRequestBody catchingBody = new ExceptionCatchingRequestBody(rawBody);
     try {
-      T body = objectParser.toResponse(catchingBody);
+      T body = responseConverter.convert(catchingBody);
       return Response.success(body, rawResponse);
     } catch (RuntimeException e) {
       // If the underlying source threw an exception, propagate that rather than indicating it was

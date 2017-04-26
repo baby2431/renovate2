@@ -16,7 +16,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface Query {
     /** The query parameter name. */
-    String value();
+    String value() default "";
 
     /**
      * Specifies whether the parameter {@linkplain #value() name} and value are already URL encoded.

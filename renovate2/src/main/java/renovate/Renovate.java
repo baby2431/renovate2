@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
+import java.util.function.Function;
 
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -36,9 +37,8 @@ public class Renovate {
     List<CallAdapter.Factory> adapterFactories;
     Executor callbackExecutor;
     boolean validateEagerly;
-
     WeakHashMap<Class, ObjectParser> clazzOP = new WeakHashMap<>();
-
+    CallAdapter defaultCallAdapterFactory ;
 
     Renovate(okhttp3.Call.Factory callFactory, HttpUrl baseUrl,
              List<Converter.Factory> converterFactories, List<CallAdapter.Factory> adapterFactories,
@@ -63,19 +63,19 @@ public class Renovate {
         initObject(object);
     }
 
-    public Call request(Object object) {
+    public Call<String> request(Object object) {
         ObjectParser objectParser = initObject(object);
-        OkHttpCall<?> okHttpCall = new OkHttpCall<>(objectParser, object);
-        objectParser.callAdapter.adapt(okHttpCall);
+        OkHttpCall<String> okHttpCall = new OkHttpCall<>(objectParser, object,responseBodyConverter(ResponseBody.class,objectParser.getAnnotations()));
         return okHttpCall;
     }
 
     private ObjectParser initObject(Object object){
-        ObjectParser objectParser= clazzOP.get(object.getClass());
-        if (objectParser == null) {
-            objectParser = new ObjectParser.Builder<>(this, object).build();
-            clazzOP.put(object.getClass(),objectParser);
-        }
+        ObjectParser objectParser =  clazzOP.computeIfAbsent(object.getClass(), new Function<Class, ObjectParser>() {
+            @Override
+            public ObjectParser apply(Class aClass) {
+                return new ObjectParser.Builder(Renovate.this, object).build();
+            }
+        });
         return objectParser;
     }
 
@@ -406,12 +406,14 @@ public class Renovate {
             }
 
             Executor callbackExecutor = this.callbackExecutor;
+
             if (callbackExecutor == null) {
                 callbackExecutor = platform.defaultCallbackExecutor();
             }
 
             // Make a defensive copy of the adapters and add the default Call adapter.
             List<CallAdapter.Factory> adapterFactories = new ArrayList<>(this.adapterFactories);
+            //FIXME 这里得到默认的呼叫请求器
             adapterFactories.add(platform.defaultCallAdapterFactory(callbackExecutor));
 
             // Make a defensive copy of the converters.

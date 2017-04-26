@@ -52,6 +52,7 @@ class Platform {
     return null;
   }
 
+  //如果在Platform当中有回掉，则使用异步的，不然使用同步回调
   CallAdapter.Factory defaultCallAdapterFactory(Executor callbackExecutor) {
     if (callbackExecutor != null) {
       return new ExecutorCallAdapterFactory(callbackExecutor);

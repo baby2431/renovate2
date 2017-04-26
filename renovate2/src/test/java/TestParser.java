@@ -3,6 +3,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.concurrent.CountDownLatch;
 
 import okhttp3.ResponseBody;
@@ -21,6 +22,16 @@ public class TestParser {
     PersonModel p = new PersonModel();
 
     @Test
+    public void test123() {
+
+        Class<Test> tClass = Test.class;
+
+        System.out.println(((Type)tClass));
+    }
+
+
+
+    @Test
     public void test() throws InterruptedException {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         p.age = 123123;
@@ -31,6 +42,7 @@ public class TestParser {
             @Override
             public void onResponse(Call call, Response response) {
                 print(response);
+                System.out.println("response thread = "+Thread.currentThread().getName());
                 countDownLatch.countDown();
             }
 
@@ -47,6 +59,7 @@ public class TestParser {
     private void print(Response<ResponseBody> response) {
         System.out.println("current thread = "+Thread.currentThread().getName());
         System.out.println(response.toString());
+        if(response.isSuccessful())
         try {
             System.out.println(response.body().string());
         } catch (IOException e) {

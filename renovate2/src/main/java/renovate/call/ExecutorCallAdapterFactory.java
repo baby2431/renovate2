@@ -26,6 +26,7 @@ import renovate.Renovate;
 import renovate.Response;
 import renovate.Utils;
 
+//带执行的请求适配器
 public final class ExecutorCallAdapterFactory extends CallAdapter.Factory {
   final Executor callbackExecutor;
 
