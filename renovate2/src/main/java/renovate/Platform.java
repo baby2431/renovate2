@@ -16,14 +16,14 @@
 package renovate;
 
 
+import renovate.call.CallAdapter;
+import renovate.call.DefaultCallAdapter;
+import renovate.call.ExecutorCallAdapter;
+
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.concurrent.Executor;
-
-import renovate.call.CallAdapter;
-import renovate.call.DefaultCallAdapterFactory;
-import renovate.call.ExecutorCallAdapterFactory;
 
 class Platform {
   private static final Platform PLATFORM = findPlatform();
@@ -53,11 +53,11 @@ class Platform {
   }
 
   //如果在Platform当中有回掉，则使用异步的，不然使用同步回调
-  CallAdapter.Factory defaultCallAdapterFactory(Executor callbackExecutor) {
+  <T>  CallAdapter<T> defaultCallAdapterFactory(Executor callbackExecutor) {
     if (callbackExecutor != null) {
-      return new ExecutorCallAdapterFactory(callbackExecutor);
+      return (CallAdapter<T>) new ExecutorCallAdapter<T>(callbackExecutor);
     }
-    return DefaultCallAdapterFactory.INSTANCE;
+    return DefaultCallAdapter.INSTANCE;
   }
 
   boolean isDefaultMethod(Method method) {
@@ -93,8 +93,8 @@ class Platform {
       return new MainThreadExecutor();
     }
 
-    @Override CallAdapter.Factory defaultCallAdapterFactory(Executor callbackExecutor) {
-      return new ExecutorCallAdapterFactory(callbackExecutor);
+    @Override CallAdapter defaultCallAdapterFactory(Executor callbackExecutor) {
+      return new ExecutorCallAdapter(callbackExecutor);
     }
 
     static class MainThreadExecutor implements Executor {

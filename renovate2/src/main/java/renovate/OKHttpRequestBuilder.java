@@ -36,7 +36,7 @@ public class OKHttpRequestBuilder {
     private FormBody.Builder formBuilder;
     private RequestBody body;
 
-    OKHttpRequestBuilder(String method, HttpUrl baseUrl, String relativeUrl, Headers headers,
+    public OKHttpRequestBuilder(String method, HttpUrl baseUrl, String relativeUrl, Headers headers,
                          MediaType contentType, boolean hasBody, boolean isFormEncoded, boolean isMultipart) {
         this.method = method;
         this.baseUrl = baseUrl;

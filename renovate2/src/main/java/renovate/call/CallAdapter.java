@@ -24,21 +24,10 @@ import renovate.Utils;
 
 /**
  * 请求适配器,在Retrofit 当中，对方法的返回类型的适配，然后对Call对象进行请求
- * Adapts a {@link Call} with response type {@code R} into the type of {@code T}. Instances are
- * created by {@linkplain Factory a factory} which is
- * {@linkplain Renovate.Builder#addCallAdapterFactory(Factory) installed} into the {@link Retrofit}
+ * Adapts a {@link Call} with response type {@code R} into the type of {@code T}.
  * instance.
  */
-public interface CallAdapter<R, T> {
-  /**
-   * Returns the value type that this adapter uses when converting the HTTP response body to a Java
-   * object. For example, the response type for {@code Call<Repo>} is {@code Repo}. This type
-   * is used to prepare the {@code call} passed to {@code #adapt}.
-   * <p>
-   * Note: This is typically not the same type as the {@code returnType} provided to this call
-   * adapter's factory.
-   */
-  Type responseType();
+public interface CallAdapter<T> {
 
   /**
    * Returns an instance of {@code T} which delegates to {@code call}.
@@ -57,33 +46,7 @@ public interface CallAdapter<R, T> {
    * }
    * </code></pre>
    */
-  T adapt(Call<R> call);
+  <R> T adapt(Call<R> call);
 
-  /**
-   * Creates {@link CallAdapter} instances based on the return type of {@linkplain
-   * Renovate#initObject(Object)} } the service interface} methods.
-   */
-  abstract class Factory {
-    /**
-     * Returns a call adapter for interface methods that return {@code returnType}, or null if it
-     * cannot be handled by this factory.
-     */
-    public abstract CallAdapter<?, ?> get(Type returnType, Renovate retrofit);
 
-    /**
-     * Extract the upper bound of the generic parameter at {@code index} from {@code type}. For
-     * example, index 1 of {@code Map<String, ? extends Runnable>} returns {@code Runnable}.
-     */
-    protected static Type getParameterUpperBound(int index, ParameterizedType type) {
-      return Utils.getParameterUpperBound(index, type);
-    }
-
-    /**
-     * Extract the raw class type from {@code type}. For example, the type representing
-     * {@code List<? extends Runnable>} returns {@code List.class}.
-     */
-    protected static Class<?> getRawType(Type type) {
-      return Utils.getRawType(type);
-    }
-  }
 }

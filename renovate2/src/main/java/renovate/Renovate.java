@@ -16,9 +16,7 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
-import renovate.call.Call;
-import renovate.call.CallAdapter;
-import renovate.call.OkHttpCall;
+import renovate.call.*;
 
 import static java.util.Collections.unmodifiableList;
 import static renovate.Utils.checkNotNull;
@@ -30,19 +28,17 @@ import static renovate.Utils.checkNotNull;
 
 public class Renovate {
 
-    private final Map<Method, ObjectParser> serviceMethodCache = new ConcurrentHashMap<>();
-    okhttp3.Call.Factory callFactory;
-    HttpUrl baseUrl;
-    List<Converter.Factory> converterFactories;
-    List<CallAdapter.Factory> adapterFactories;
-    Executor callbackExecutor;
-    boolean validateEagerly;
-    WeakHashMap<Class, ObjectParser> clazzOP = new WeakHashMap<>();
-    CallAdapter defaultCallAdapterFactory ;
+    private okhttp3.Call.Factory callFactory;
+    private HttpUrl baseUrl;
+    private List<Converter.Factory> converterFactories;
+    private List<CallAdapter> adapterFactories;
+    private Executor callbackExecutor;
+    private boolean validateEagerly;
+    private WeakHashMap<Class, ObjectParser> clazzOP = new WeakHashMap<>();
 
     Renovate(okhttp3.Call.Factory callFactory, HttpUrl baseUrl,
-             List<Converter.Factory> converterFactories, List<CallAdapter.Factory> adapterFactories,
-             Executor callbackExecutor, boolean validateEagerly) {
+             List<Converter.Factory> converterFactories,
+             Executor callbackExecutor, boolean validateEagerly, Platform platform) {
         this.callFactory = callFactory;
         this.baseUrl = baseUrl;
         this.converterFactories = unmodifiableList(converterFactories); // Defensive copy at call site.
@@ -59,25 +55,22 @@ public class Renovate {
         return callFactory;
     }
 
-    public void hotInit(Object object){
-        initObject(object);
-    }
 
-    public Call<String> request(Object object) {
-        ObjectParser objectParser = initObject(object);
-        OkHttpCall<String> okHttpCall = new OkHttpCall<>(objectParser, object,responseBodyConverter(ResponseBody.class,objectParser.getAnnotations()));
-        return okHttpCall;
-    }
 
     private ObjectParser initObject(Object object){
-        ObjectParser objectParser =  clazzOP.computeIfAbsent(object.getClass(), new Function<Class, ObjectParser>() {
+        return clazzOP.computeIfAbsent(object.getClass(), new Function<Class, ObjectParser>() {
             @Override
             public ObjectParser apply(Class aClass) {
                 return new ObjectParser.Builder(Renovate.this, object).build();
             }
         });
-        return objectParser;
     }
+
+    private Request request(Object object){
+        ObjectParser objectParser = initObject(object);
+        return new Request(objectParser);
+    }
+
 
     /**
      * Returns a list of the factories tried when creating a
@@ -99,62 +92,9 @@ public class Renovate {
         return nextResponseBodyConverter(null, type, annotations);
     }
 
-    /**
-     * Returns a list of the factories tried when creating a
-     * {@linkplain #callAdapter(Type, Annotation[])} call adapter}.
-     */
-    public List<CallAdapter.Factory> callAdapterFactories() {
-        return adapterFactories;
-    }
-
-    /**
-     * 获取到要用到的请求适配器
-     * Returns the {@link CallAdapter} for {@code returnType} from the available {@linkplain
-     * #callAdapterFactories() factories}.
-     *
-     * @throws IllegalArgumentException if no call adapter available for {@code type}.
-     */
-    public CallAdapter<?, ?> callAdapter(Type returnType, Annotation[] annotations) {
-        return nextCallAdapter(null, returnType, annotations);
-    }
 
 
-    /**
-     * Returns the {@link CallAdapter} for {@code returnType} from the available {@linkplain
-     * #callAdapterFactories() factories} except {@code skipPast}.
-     *
-     * @throws IllegalArgumentException if no call adapter available for {@code type}.
-     */
-    public CallAdapter<?, ?> nextCallAdapter(CallAdapter.Factory skipPast, Type returnType,
-                                             Annotation[] annotations) {
-        checkNotNull(returnType, "returnType == null");
-        checkNotNull(annotations, "annotations == null");
 
-        int start = adapterFactories.indexOf(skipPast) + 1;
-        for (int i = start, count = adapterFactories.size(); i < count; i++) {
-            //通过注解和返回值类型 返回对应的请求适配器
-            CallAdapter<?, ?> adapter = adapterFactories.get(i).get(returnType,  this);
-            if (adapter != null) {
-                return adapter;
-            }
-        }
-
-        StringBuilder builder = new StringBuilder("Could not locate call adapter for ")
-                .append(returnType)
-                .append(".\n");
-        if (skipPast != null) {
-            builder.append("  Skipped:");
-            for (int i = 0; i < start; i++) {
-                builder.append("\n   * ").append(adapterFactories.get(i).getClass().getName());
-            }
-            builder.append('\n');
-        }
-        builder.append("  Tried:");
-        for (int i = start, count = adapterFactories.size(); i < count; i++) {
-            builder.append("\n   * ").append(adapterFactories.get(i).getClass().getName());
-        }
-        throw new IllegalArgumentException(builder.toString());
-    }
 
     /**
      * Returns a {@link Converter} for {@link ResponseBody} to {@code type} from the available
@@ -170,7 +110,7 @@ public class Renovate {
         int start = converterFactories.indexOf(skipPast) + 1;
         for (int i = start, count = converterFactories.size(); i < count; i++) {
             Converter<ResponseBody, ?> converter =
-                    converterFactories.get(i).responseBodyConverter(type, annotations, this);
+                    converterFactories.get(i). responseBodyConverter(type, annotations, this);
             if (converter != null) {
                 //noinspection unchecked
                 return (Converter<ResponseBody, T>) converter;
@@ -285,7 +225,6 @@ public class Renovate {
         private okhttp3.Call.Factory callFactory;
         private HttpUrl baseUrl;
         private final List<Converter.Factory> converterFactories = new ArrayList<>();
-        private final List<CallAdapter.Factory> adapterFactories = new ArrayList<>();
         private Executor callbackExecutor;
         private boolean validateEagerly;
 
@@ -305,9 +244,7 @@ public class Renovate {
             callFactory = retrofit.callFactory;
             baseUrl = retrofit.baseUrl;
             converterFactories.addAll(retrofit.converterFactories);
-            adapterFactories.addAll(retrofit.adapterFactories);
             // Remove the default, platform-aware call adapter added by build().
-            adapterFactories.remove(adapterFactories.size() - 1);
             callbackExecutor = retrofit.callbackExecutor;
             validateEagerly = retrofit.validateEagerly;
         }
@@ -367,14 +304,6 @@ public class Renovate {
             return this;
         }
 
-        /**
-         * Add a call adapter factory for supporting service method return types other than {@link
-         * Call}.
-         */
-        public Builder addCallAdapterFactory(CallAdapter.Factory factory) {
-            adapterFactories.add(checkNotNull(factory, "factory == null"));
-            return this;
-        }
 
         /**
          * The executor on which {@link Callback} methods are invoked when returning {@link Call} from
@@ -411,16 +340,11 @@ public class Renovate {
                 callbackExecutor = platform.defaultCallbackExecutor();
             }
 
-            // Make a defensive copy of the adapters and add the default Call adapter.
-            List<CallAdapter.Factory> adapterFactories = new ArrayList<>(this.adapterFactories);
-            //FIXME 这里得到默认的呼叫请求器
-            adapterFactories.add(platform.defaultCallAdapterFactory(callbackExecutor));
-
             // Make a defensive copy of the converters.
             List<Converter.Factory> converterFactories = new ArrayList<>(this.converterFactories);
 
-            return new Renovate(callFactory, baseUrl, converterFactories, adapterFactories,
-                    callbackExecutor, validateEagerly);
+            return new Renovate(callFactory, baseUrl, converterFactories,
+                    callbackExecutor, validateEagerly, platform);
         }
     }
 

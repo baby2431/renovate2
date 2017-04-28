@@ -27,32 +27,20 @@ import renovate.Response;
 import renovate.Utils;
 
 //带执行的请求适配器
-public final class ExecutorCallAdapterFactory extends CallAdapter.Factory {
+public final class ExecutorCallAdapter<T> implements CallAdapter<Call<T>>{
   final Executor callbackExecutor;
 
-  public ExecutorCallAdapterFactory(Executor callbackExecutor) {
+  public ExecutorCallAdapter(Executor callbackExecutor) {
     this.callbackExecutor = callbackExecutor;
   }
 
-  @Override
-  public CallAdapter<?, ?> get(Type returnType,  Renovate renovate) {
-    if (getRawType(returnType) != Call.class) {
-      return null;
+
+    @Override
+    public <R> Call<T> adapt(Call<R> call) {
+        return (Call<T>) new ExecutorCallbackCall<R>(callbackExecutor, call);
     }
-    //区别
-    final Type responseType = Utils.getCallResponseType(returnType);//区别
-    return new CallAdapter<Object, Call<?>>() {
-      @Override public Type responseType() {
-        return responseType;
-      }
 
-      @Override public Call<Object> adapt(Call<Object> call) {
-        return new ExecutorCallbackCall<>(callbackExecutor, call);
-      }
-    };
-  }
-
-  static final class ExecutorCallbackCall<T> implements Call<T> {
+    static final class ExecutorCallbackCall<T> implements Call<T> {
     final Executor callbackExecutor;
     final Call<T> delegate;
 
