@@ -31,7 +31,6 @@ public class Renovate {
     private okhttp3.Call.Factory callFactory;
     private HttpUrl baseUrl;
     private List<Converter.Factory> converterFactories;
-    private List<CallAdapter> adapterFactories;
     private Executor callbackExecutor;
     private boolean validateEagerly;
     private WeakHashMap<Class, ObjectParser> clazzOP = new WeakHashMap<>();
@@ -42,7 +41,6 @@ public class Renovate {
         this.callFactory = callFactory;
         this.baseUrl = baseUrl;
         this.converterFactories = unmodifiableList(converterFactories); // Defensive copy at call site.
-        this.adapterFactories = unmodifiableList(adapterFactories); // Defensive copy at call site.
         this.callbackExecutor = callbackExecutor;
         this.validateEagerly = validateEagerly;
     }
@@ -66,9 +64,9 @@ public class Renovate {
         });
     }
 
-    private Request request(Object object){
+    public Request request(Object object){
         ObjectParser objectParser = initObject(object);
-        return new Request(objectParser);
+        return new Request(this,objectParser,object);
     }
 
 
