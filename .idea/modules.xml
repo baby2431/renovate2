@@ -2,8 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/renovate/renovate.iml" filepath="$PROJECT_DIR$/.idea/modules/renovate/renovate.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/renovate2.iml" filepath="$PROJECT_DIR$/.idea/modules/renovate2.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/renovate2/renovate2-renovate2.iml" filepath="$PROJECT_DIR$/.idea/modules/renovate2/renovate2-renovate2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/rx-renovate/rx-renovate.iml" filepath="$PROJECT_DIR$/.idea/modules/rx-renovate/rx-renovate.iml" />
     </modules>
   </component>
 </project>

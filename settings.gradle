@@ -1,1 +1,2 @@
-include ':renovate2'
+include ':renovate', ':rx-renovate'
+
