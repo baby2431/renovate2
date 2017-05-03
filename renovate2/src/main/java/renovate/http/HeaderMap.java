@@ -16,6 +16,7 @@
 package renovate.http;
 
 import java.lang.annotation.Documented;
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.Map;
@@ -26,6 +27,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 @Target(PARAMETER)
 @Retention(RUNTIME)
+@Inherited
 public @interface HeaderMap {
 
 }

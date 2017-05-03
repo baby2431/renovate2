@@ -9,7 +9,6 @@
  {@link renovate.Platform}
  {@link renovate.Renovate}
  {@link renovate.Response}
- {@link renovate.Test}
  {@link renovate.Utils}
  */
 package renovate.http;
