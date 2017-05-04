@@ -26,7 +26,6 @@ import renovate.Renovate;
 import renovate.Response;
 import renovate.Utils;
 
-//带执行的请求适配器
 public final class ExecutorCallAdapter<T> implements CallAdapter<Call<T>>{
   final Executor callbackExecutor;
 
@@ -56,7 +55,6 @@ public final class ExecutorCallAdapter<T> implements CallAdapter<Call<T>>{
         @Override public void onResponse(Call<T> call, final Response<T> response) {
           callbackExecutor.execute(new Runnable() {
             @Override public void run() {
-              //代理的方式
               if (delegate.isCanceled()) {
                 // Emulate OkHttp's behavior of throwing/delivering an IOException on cancellation.
                 callback.onFailure(ExecutorCallbackCall.this, new IOException("Canceled"));

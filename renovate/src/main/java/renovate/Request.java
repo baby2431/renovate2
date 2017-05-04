@@ -5,16 +5,12 @@ import renovate.call.Call;
 import renovate.call.CallAdapter;
 import renovate.call.OkHttpCall;
 
-/**
- * 组成Request所有所需对象
- * Created by babyt on 2017/4/27.
- */
 public class Request {
-    ObjectParser objectParser;
-    Converter<ResponseBody, ?> responseBodyConverter;
-    CallAdapter<?> adapter;
-    Object object;
-    Renovate renovate;
+    private ObjectParser objectParser;
+    private Converter<ResponseBody, ?> responseBodyConverter;
+    private CallAdapter<?> adapter;
+    private Object object;
+    private Renovate renovate;
 
     public Request(ObjectParser objectParser, Converter<ResponseBody, ?> responseBodyConverter, CallAdapter<?> adapter) {
         this.objectParser = objectParser;
@@ -29,28 +25,20 @@ public class Request {
         this.object = object;
     }
 
-    /**
-     */
     public <T, E> E request(ResponseConvert<T> converter, CallAdapter<E> adapter) {
         return adapter.adapt(request(converter));
     }
 
-    /**
-     */
     public <E> E request(CallAdapter<E> adapter) {
         return adapter.adapt(request());
     }
 
-    /**
-     */
     public <T> Call<T> request(ResponseConvert<T> converter) {
         return new OkHttpCall<>(objectParser, object, converter);
     }
 
-    /**
-     */
     public Call<ResponseBody> request() {
-        return new OkHttpCall<>(objectParser, object, renovate.responseBodyConverter(ResponseBody.class, objectParser.getAnnotations()));
+        return new OkHttpCall<ResponseBody>(objectParser, object, renovate.responseBodyConverter(ResponseBody.class, objectParser.getAnnotations()));
     }
 }
 

@@ -11,16 +11,13 @@ import rx.Subscriber;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
-/**
- * Created by babyt on 2017/5/3.
- */
 public class TestRxJava {
 
     PersonModel p = new PersonModel();
 
     @Test
     public void testRxJavaBase() throws InterruptedException {
-        CountDownLatch countDownLatch = new CountDownLatch(1);
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
         p.age = 123123;
         p.name = "xiao wenwen";
         System.out.println("current thread = " + Thread.currentThread().getName());

@@ -26,10 +26,6 @@ import okhttp3.RequestBody;
 import static renovate.Utils.checkNotNull;
 
 
-/**
- * 将对象的值构建到okhttp
- * @param <T>
- */
 abstract class ParameterHandler<T> {
   abstract void apply(OKHttpRequestBuilder builder, T value) throws IOException;
 

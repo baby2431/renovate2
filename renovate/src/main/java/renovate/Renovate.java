@@ -22,10 +22,6 @@ import static java.util.Collections.unmodifiableList;
 import static renovate.Utils.checkNotNull;
 
 
-/**
- * Created by xmmc on 2017/3/24.
- */
-
 public class Renovate {
 
     private okhttp3.Call.Factory callFactory;
@@ -45,17 +41,13 @@ public class Renovate {
         this.validateEagerly = validateEagerly;
     }
 
-    /**
-     * The factory used to create {@linkplain okhttp3.Call OkHttp calls} for sending a HTTP requests.
-     * Typically an instance of {@link OkHttpClient}.
-     */
     public okhttp3.Call.Factory callFactory() {
         return callFactory;
     }
 
 
 
-    private ObjectParser initObject(Object object){
+    private ObjectParser initObject(final Object object){
         return clazzOP.computeIfAbsent(object.getClass(), new Function<Class, ObjectParser>() {
             @Override
             public ObjectParser apply(Class aClass) {
@@ -70,35 +62,15 @@ public class Renovate {
     }
 
 
-    /**
-     * Returns a list of the factories tried when creating a
-     * {@linkplain #responseBodyConverter(Type, Annotation[]) response body converter}, or a
-     * {@linkplain #stringConverter(Type, Annotation[]) string converter}.
-     */
     public List<Converter.Factory> converterFactories() {
         return converterFactories;
     }
 
-    /**
-     * Returns a {@link Converter} for {@link ResponseBody} to {@code type} from the available
-     * {@linkplain #converterFactories() factories}.
-     *
-     * @throws IllegalArgumentException if no converter available for {@code type}.
-     */
     public <T> Converter<ResponseBody, T> responseBodyConverter(Type type, Annotation[] annotations) {
         return nextResponseBodyConverter(null, type, annotations);
     }
 
 
-
-
-
-    /**
-     * Returns a {@link Converter} for {@link ResponseBody} to {@code type} from the available
-     * {@linkplain #converterFactories() factories} except {@code skipPast}.
-     *
-     * @throws IllegalArgumentException if no converter available for {@code type}.
-     */
     public <T> Converter<ResponseBody, T> nextResponseBodyConverter(Converter.Factory skipPast,
                                                                     Type type, Annotation[] annotations) {
         checkNotNull(type, "type == null");
@@ -131,23 +103,11 @@ public class Renovate {
         throw new IllegalArgumentException(builder.toString());
     }
 
-    /**
-     * Returns a {@link Converter} for {@code type} to {@link RequestBody} from the available
-     * {@linkplain #converterFactories() factories}.
-     *
-     * @throws IllegalArgumentException if no converter available for {@code type}.
-     */
     public <T> Converter<T, RequestBody> requestBodyConverter(Type type,
                                                               Annotation[] parameterAnnotations) {
         return nextRequestBodyConverter(null, type, parameterAnnotations);
     }
 
-    /**
-     * Returns a {@link Converter} for {@code type} to {@link RequestBody} from the available
-     * {@linkplain #converterFactories() factories} except {@code skipPast}.
-     *
-     * @throws IllegalArgumentException if no converter available for {@code type}.
-     */
     public <T> Converter<T, RequestBody> nextRequestBodyConverter(Converter.Factory skipPast,
                                                                   Type type, Annotation[] parameterAnnotations) {
         checkNotNull(type, "type == null");
@@ -181,17 +141,10 @@ public class Renovate {
         throw new IllegalArgumentException(builder.toString());
     }
 
-    /**
-     * The API base URL.
-     */
     public HttpUrl baseUrl() {
         return baseUrl;
     }
 
-    /**
-     * Returns a {@link Converter} for {@code type} to {@link String} from the available
-     * {@linkplain #converterFactories() factories}.
-     */
     public <T> Converter<T, String> stringConverter(Type type, Annotation[] annotations) {
         checkNotNull(type, "type == null");
         checkNotNull(annotations, "annotations == null");
@@ -210,12 +163,6 @@ public class Renovate {
         return (Converter<T, String>) BuiltInConverters.ToStringConverter.INSTANCE;
     }
 
-    /**
-     * Build a new {@link Renovate}.
-     * <p>
-     * Calling {@link #baseUrl} is required before calling {@link #build()}. All other methods
-     * are optional.
-     */
     public static final class Builder {
         private final Platform platform;
         private okhttp3.Call.Factory callFactory;
@@ -245,30 +192,15 @@ public class Renovate {
             validateEagerly = retrofit.validateEagerly;
         }
 
-        /**
-         * The HTTP client used for requests.
-         * <p>
-         * This is a convenience method for calling {@link #callFactory}.
-         */
         public Builder client(OkHttpClient client) {
             return callFactory(checkNotNull(client, "client == null"));
         }
 
-        /**
-         * Specify a custom call factory for creating {@link Call} instances.
-         * <p>
-         * Note: Calling {@link #client} automatically sets this value.
-         */
         public Builder callFactory(okhttp3.Call.Factory factory) {
             this.callFactory = checkNotNull(factory, "factory == null");
             return this;
         }
 
-        /**
-         * Set the API base URL.
-         *
-         * @see #baseUrl(HttpUrl)
-         */
         public Builder baseUrl(String baseUrl) {
             checkNotNull(baseUrl, "baseUrl == null");
             if (!baseUrl.endsWith("\\")) {

@@ -20,9 +20,7 @@ import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
 
-/** An HTTP response. */
 public final class Response<T> {
-  /** Create a synthetic successful response with {@code body} as the deserialized body. */
   public static <T> Response<T> success(T body) {
     return success(body, new okhttp3.Response.Builder() //
         .code(200)
@@ -32,10 +30,6 @@ public final class Response<T> {
         .build());
   }
 
-  /**
-   * Create a synthetic successful response using {@code headers} with {@code body} as the
-   * deserialized body.
-   */
   public static <T> Response<T> success(T body, Headers headers) {
     if (headers == null) throw new NullPointerException("headers == null");
     return success(body, new okhttp3.Response.Builder() //
@@ -47,10 +41,6 @@ public final class Response<T> {
         .build());
   }
 
-  /**
-   * Create a successful response from {@code rawResponse} with {@code body} as the deserialized
-   * body.
-   */
   public static <T> Response<T> success(T body, okhttp3.Response rawResponse) {
     if (rawResponse == null) throw new NullPointerException("rawResponse == null");
     if (!rawResponse.isSuccessful()) {
@@ -59,10 +49,6 @@ public final class Response<T> {
     return new Response<>(rawResponse, body, null);
   }
 
-  /**
-   * Create a synthetic error response with an HTTP status code of {@code code} and {@code body}
-   * as the error body.
-   */
   public static <T> Response<T> error(int code, ResponseBody body) {
     if (code < 400) throw new IllegalArgumentException("code < 400: " + code);
     return error(body, new okhttp3.Response.Builder() //
@@ -72,7 +58,6 @@ public final class Response<T> {
         .build());
   }
 
-  /** Create an error response from {@code rawResponse} with {@code body} as the error body. */
   public static <T> Response<T> error(ResponseBody body, okhttp3.Response rawResponse) {
     if (body == null) throw new NullPointerException("body == null");
     if (rawResponse == null) throw new NullPointerException("rawResponse == null");
@@ -92,37 +77,30 @@ public final class Response<T> {
     this.errorBody = errorBody;
   }
 
-  /** The raw response from the HTTP client. */
   public okhttp3.Response raw() {
     return rawResponse;
   }
 
-  /** HTTP status code. */
   public int code() {
     return rawResponse.code();
   }
 
-  /** HTTP status message or null if unknown. */
   public String message() {
     return rawResponse.message();
   }
 
-  /** HTTP headers. */
   public Headers headers() {
     return rawResponse.headers();
   }
 
-  /** Returns true if {@link #code()} is in the range [200..300). */
   public boolean isSuccessful() {
     return rawResponse.isSuccessful();
   }
 
-  /** The deserialized response body of a {@linkplain #isSuccessful() successful} response. */
   public T body() {
     return body;
   }
 
-  /** The raw response body of an {@linkplain #isSuccessful() unsuccessful} response. */
   public ResponseBody errorBody() {
     return errorBody;
   }

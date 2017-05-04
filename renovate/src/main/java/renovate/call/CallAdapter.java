@@ -22,31 +22,6 @@ import java.lang.reflect.Type;
 import renovate.Renovate;
 import renovate.Utils;
 
-/**
- * 请求适配器,在Retrofit 当中，对方法的返回类型的适配，然后对Call对象进行请求
- * Adapts a {@link Call} with response type {@code R} into the type of {@code T}.
- * instance.
- */
 public interface CallAdapter<T> {
-
-  /**
-   * Returns an instance of {@code T} which delegates to {@code call}.
-   * <p>
-   * For example, given an instance for a hypothetical utility, {@code Async}, this instance would
-   * return a new {@code Async<R>} which invoked {@code call} when run.
-   * <pre><code>
-   * &#64;Override
-   * public &lt;R&gt; Async&lt;R&gt; adapt(final Call&lt;R&gt; call) {
-   *   return Async.create(new Callable&lt;Response&lt;R&gt;&gt;() {
-   *     &#64;Override
-   *     public Response&lt;R&gt; call() throws Exception {
-   *       return call.execute();
-   *     }
-   *   });
-   * }
-   * </code></pre>
-   */
   <R> T adapt(Call<R> call);
-
-
 }

@@ -26,7 +26,6 @@ import okio.ForwardingSource;
 import okio.Okio;
 import renovate.*;
 
-//// FIXME: 2017/4/11
 public final class OkHttpCall<T> implements Call<T> {
   private final ObjectParser objectParser;
   private final Object args;
@@ -37,9 +36,9 @@ public final class OkHttpCall<T> implements Call<T> {
   private okhttp3.Call rawCall;
   private Throwable creationFailure; // Either a RuntimeException or IOException.
   private boolean executed;
-  private Converter<ResponseBody, T> responseConverter;
+  private Converter<ResponseBody, ?> responseConverter;
 
-  public OkHttpCall(ObjectParser objectParser, Object args,Converter<ResponseBody, T> responseConverter) {
+  public OkHttpCall(ObjectParser objectParser, Object args,Converter<ResponseBody, ?> responseConverter) {
     this.objectParser = objectParser;
     this.args = args;
     this.responseConverter = responseConverter;
@@ -214,7 +213,7 @@ public final class OkHttpCall<T> implements Call<T> {
 
     ExceptionCatchingRequestBody catchingBody = new ExceptionCatchingRequestBody(rawBody);
     try {
-      T body = responseConverter.convert(catchingBody);
+      T body = (T) responseConverter.convert(catchingBody);
       return Response.success(body, rawResponse);
     } catch (RuntimeException e) {
       // If the underlying source threw an exception, propagate that rather than indicating it was

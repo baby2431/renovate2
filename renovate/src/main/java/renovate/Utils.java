@@ -49,7 +49,7 @@ public final class Utils {
 
       // I'm not exactly sure why getRawType() returns Type instead of Class. Neal isn't either but
       // suspects some pathological case related to nested classes exists.
-      Type rawType = parameterizedType.getRawType(); //得到具体的类型 不带泛型和类型
+      Type rawType = parameterizedType.getRawType();
       if (!(rawType instanceof Class)) throw new IllegalArgumentException();
       return (Class<?>) rawType;
     }
@@ -70,7 +70,6 @@ public final class Utils {
           + "GenericArrayType, but <" + type + "> is of type " + type.getClass().getName());
   }
 
-  /** Returns true if {@code a} and {@code b} are equal. */
   static boolean equals(Type a, Type b) {
     if (a == b) {
       return true; // Also handles (a == null && b == null).
@@ -111,11 +110,6 @@ public final class Utils {
     }
   }
 
-  /**
-   * Returns the generic supertype for {@code supertype}. For example, given a class {@code
-   * IntegerSet}, the result for when supertype is {@code Set.class} is {@code Set<Integer>} and the
-   * result when the supertype is {@code Collection.class} is {@code Collection<Integer>}.
-   */
   static Type getGenericSupertype(Type context, Class<?> rawType, Class<?> toResolve) {
     if (toResolve == rawType) return context;
 
@@ -167,13 +161,6 @@ public final class Utils {
     return type instanceof Class ? ((Class<?>) type).getName() : type.toString();
   }
 
-  /**
-   * Returns the generic form of {@code supertype}. For example, if this is {@code
-   * ArrayList<String>}, this returns {@code Iterable<String>} given the input {@code
-   * Iterable.class}.
-   *
-   * @param supertype a superclass of, or interface implemented by, this.
-   */
   static Type getSupertype(Type context, Class<?> contextRawType, Class<?> supertype) {
     if (!supertype.isAssignableFrom(contextRawType)) throw new IllegalArgumentException();
     return resolve(context, contextRawType,
@@ -265,11 +252,6 @@ public final class Utils {
 
     return unknown;
   }
-
-  /**
-   * Returns the declaring class of {@code typeVariable}, or {@code null} if it was not declared by
-   * a class.
-   */
   private static Class<?> declaringClassOf(TypeVariable<?> typeVariable) {
     GenericDeclaration genericDeclaration = typeVariable.getGenericDeclaration();
     return genericDeclaration instanceof Class ? (Class<?>) genericDeclaration : null;
@@ -288,7 +270,6 @@ public final class Utils {
     return object;
   }
 
-  /** Returns true if {@code annotations} contains an instance of {@code cls}. */
   public static boolean isAnnotationPresent(Annotation[] annotations,
       Class<? extends Annotation> cls) {
     for (Annotation annotation : annotations) {
@@ -298,7 +279,6 @@ public final class Utils {
     }
     return false;
   }
-  // FIXME: 2017/4/11 访问属性
   public static ResponseBody buffer(final ResponseBody body) throws IOException {
     Buffer buffer = new Buffer();
     body.source().readAll(buffer);
@@ -317,20 +297,14 @@ public final class Utils {
     }
   }
 
-  /**
-   * 得到参数的类型上限 通过位置，得到该参数类型上的统配类型
-   * @param index
-   * @param type
-   * @return
-     */
   public static Type getParameterUpperBound(int index, ParameterizedType type) {
-    Type[] types = type.getActualTypeArguments();//返回参数数组
-    if (index < 0 || index >= types.length) { //
+    Type[] types = type.getActualTypeArguments();
+    if (index < 0 || index >= types.length) {
       throw new IllegalArgumentException(
           "Index " + index + " not in range [0," + types.length + ") for " + type);
     }
     Type paramType = types[index];
-    if (paramType instanceof WildcardType) { //通配类型
+    if (paramType instanceof WildcardType) {
       return ((WildcardType) paramType).getUpperBounds()[0];
     }
     return paramType;

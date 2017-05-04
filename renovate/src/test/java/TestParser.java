@@ -13,9 +13,6 @@ import renovate.Response;
 import renovate.call.Call;
 import renovate.http.Ignore;
 
-/**
- * Created by xmmc on 2017/3/29.
- */
 public class TestParser {
 
     PersonModel p = new PersonModel();
@@ -31,7 +28,7 @@ public class TestParser {
 
     @Test
     public void test() throws InterruptedException {
-        CountDownLatch countDownLatch = new CountDownLatch(1);
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
         p.age = 123123;
         p.name = "xiao wenwen";
         System.out.println("current thread = " + Thread.currentThread().getName());
@@ -57,7 +54,7 @@ public class TestParser {
 
     @Test
     public void testConvert() throws InterruptedException {
-        CountDownLatch countDownLatch = new CountDownLatch(1);
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
         p.age = 123123;
         p.name = "xiao wenwen";
         System.out.println("current thread = " + Thread.currentThread().getName());
@@ -92,7 +89,7 @@ public class TestParser {
                 e.printStackTrace();
             }
         } else {
-            System.out.println("失败");
+            System.out.println("fail ");
         }
         System.out.println(response.message());
     }
@@ -108,7 +105,7 @@ public class TestParser {
             ///public class PersonModel
             try {
                 if (field.isAnnotationPresent(Ignore.class)) {
-                    System.out.println("已忽略字段 " + clazz.getName() + "." + field.getName());
+                    System.out.println(" " + clazz.getName() + "." + field.getName());
                     continue;
                 }
                 field.setAccessible(true);

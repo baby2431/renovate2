@@ -55,6 +55,5 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 @Inherited
 public @interface QueryMap {
-  /** Specifies whether parameter names and values are already URL encoded. */
   boolean encoded() default false;
 }

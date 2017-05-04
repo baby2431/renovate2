@@ -72,7 +72,6 @@ public class ObjectParser {
         this.fieldParameterHandlerMap = builder.fieldParameterHandlerMap;
         this.clazz = builder.clazz;
     }
-    // FIXME: 2017/4/11 访问属性
 
     public Annotation[] getAnnotations(){
         return clazz.getAnnotations();
@@ -83,9 +82,6 @@ public class ObjectParser {
     }
 
 
-    /**
-     * Builds an HTTP request from method arguments.
-     */
     public Request toRequest(Object args) throws IOException {
         OKHttpRequestBuilder requestBuilder = new OKHttpRequestBuilder(httpMethod, baseUrl, relativeUrl, headers,
                 contentType, hasBody, isFormEncoded, isMultipart);
@@ -139,11 +135,6 @@ public class ObjectParser {
 
         }
 
-        /**
-         * 解析对象的配置和字段
-         *
-         * @return
-         */
         public ObjectParser build() {
             for (Annotation annotation : objectAnnotations) {
                 parseHttpAnnotation(annotation);
@@ -191,12 +182,6 @@ public class ObjectParser {
             return new ObjectParser(this);
         }
 
-        /**
-         * @param p             位置
-         * @param parameterType 参数类型
-         * @param annotations   包含的注解
-         * @return
-         */
         private ParameterHandler<?> parseParameter(
                 int p, Type parameterType, Annotation[] annotations, Field field) {
             ParameterHandler<?> result = null;
@@ -595,12 +580,6 @@ public class ObjectParser {
         }
 
 
-        /**
-         * 效验跟路径当中的restful匹配
-         *
-         * @param p
-         * @param name
-         */
         private void validatePathName(int p, String name) {
             if (!PARAM_NAME_REGEX.matcher(name).matches()) {
                 throw objectError(p, "@Path parameter name must match %s. Found: %s",
@@ -612,17 +591,11 @@ public class ObjectParser {
             }
         }
 
-        /**
-         * 解析 link{ renovate.Http}
-         *
-         * @param annotation
-         */
         private void parseHttpAnnotation(Annotation annotation) {
             if (annotation instanceof HTTP) {
                 HTTP http = (HTTP) annotation;
                 parseHttpMethodAndPath(http.method().name(), http.path(), http.hasBody());
             } else if (annotation instanceof renovate.http.Headers) {
-                //// FIXME: 2017/4/10 具体设计方式不明，headers
                 String[] headersToParse = ((renovate.http.Headers) annotation).value();
                 if (headersToParse.length == 0) {
                     throw objectError("@Headers annotation is empty.");
@@ -641,14 +614,6 @@ public class ObjectParser {
             }
         }
 
-        /**
-         * 设置Http的方法和路径
-         * 设置请求方法和请求方式 获取到url当中的参数
-         *
-         * @param httpMethod
-         * @param value
-         * @param hasBody
-         */
         private void parseHttpMethodAndPath(String httpMethod, String value, boolean hasBody) {
             if (this.httpMethod != null) {
                 throw objectError("Only one HTTP method is allowed. Found: %s and %s.",
@@ -676,10 +641,6 @@ public class ObjectParser {
         }
 
 
-        /**
-         * Gets the set of unique path parameters used in the given URI. If a parameter is used twice
-         * in the URI, it will only show up once in the set.
-         */
         static Set<String> parsePathParameters(String path) {
             Matcher m = PARAM_URL_REGEX.matcher(path);
             Set<String> patterns = new LinkedHashSet();
@@ -690,12 +651,6 @@ public class ObjectParser {
         }
 
 
-        /**
-         * 解析头部
-         *
-         * @param headers
-         * @return
-         */
         private Headers parseHeaders(String[] headers) {
             Headers.Builder builder = new Headers.Builder();
             for (String header : headers) {
