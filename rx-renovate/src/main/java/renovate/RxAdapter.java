@@ -1,10 +1,6 @@
 package renovate;
 
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import renovate.call.Call;
-import renovate.call.CallAdapter;
 import rx.Observable;
 import rx.Producer;
 import rx.Subscriber;
@@ -12,15 +8,12 @@ import rx.Subscription;
 import rx.exceptions.Exceptions;
 import rx.schedulers.Schedulers;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class RxAdapter<T> implements CallAdapter<Observable<T>> {
 
     public static <T> RxAdapter<T> create() {
         return ConvertHolder.convert;
-    }
-
-    private static class ConvertHolder {
-
-        private static RxAdapter convert = new RxAdapter();
     }
 
     @Override
@@ -28,6 +21,11 @@ public class RxAdapter<T> implements CallAdapter<Observable<T>> {
         return Observable.create(new CallOnSubscribe<>((Call<T>) call))
                 .subscribeOn(Schedulers.io())
                 .lift(OperatorMapResponseToBodyOrError.<T>instance());
+    }
+
+    private static class ConvertHolder {
+
+        private static RxAdapter convert = new RxAdapter();
     }
 
     private static final class CallOnSubscribe<T> implements Observable.OnSubscribe<Response<T>> {

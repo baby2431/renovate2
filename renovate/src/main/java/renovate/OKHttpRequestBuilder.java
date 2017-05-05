@@ -1,23 +1,13 @@
 package renovate;
 
-import java.io.IOException;
-
-import okhttp3.FormBody;
-import okhttp3.Headers;
-import okhttp3.HttpUrl;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
+import okhttp3.*;
 import okhttp3.Request;
-import okhttp3.RequestBody;
 import okio.Buffer;
 import okio.BufferedSink;
 
-/**
- * Created by xmmc on 2017/3/24.
- */
+import java.io.IOException;
 
-
-public class OKHttpRequestBuilder {
+class OKHttpRequestBuilder {
     private static final char[] HEX_DIGITS =
             { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
     private static final String PATH_SEGMENT_ALWAYS_ENCODE_SET = " \"<>^`{}|\\?#";
@@ -25,18 +15,16 @@ public class OKHttpRequestBuilder {
     private final String method;
 
     private final HttpUrl baseUrl;
+    private final Request.Builder requestBuilder;
+    private final boolean hasBody;
     private String relativeUrl;
     private HttpUrl.Builder urlBuilder;
-
-    private final Request.Builder requestBuilder;
     private MediaType contentType;
-
-    private final boolean hasBody;
     private MultipartBody.Builder multipartBuilder;
     private FormBody.Builder formBuilder;
     private RequestBody body;
 
-    public OKHttpRequestBuilder(String method, HttpUrl baseUrl, String relativeUrl, Headers headers,
+    OKHttpRequestBuilder(String method, HttpUrl baseUrl, String relativeUrl, Headers headers,
                          MediaType contentType, boolean hasBody, boolean isFormEncoded, boolean isMultipart) {
         this.method = method;
         this.baseUrl = baseUrl;
@@ -57,31 +45,6 @@ public class OKHttpRequestBuilder {
             multipartBuilder = new MultipartBody.Builder();
             multipartBuilder.setType(MultipartBody.FORM);
         }
-    }
-
-    void setRelativeUrl(Object relativeUrl) {
-        if (relativeUrl == null) throw new NullPointerException("@Url parameter is null.");
-        this.relativeUrl = relativeUrl.toString();
-    }
-
-    void addHeader(String name, String value) {
-        if ("Content-Type".equalsIgnoreCase(name)) {
-            MediaType type = MediaType.parse(value);
-            if (type == null) {
-                throw new IllegalArgumentException("Malformed content type: " + value);
-            }
-            contentType = type;
-        } else {
-            requestBuilder.addHeader(name, value);
-        }
-    }
-
-    void addPathParam(String name, String value, boolean encoded) {
-        if (relativeUrl == null) {
-            // The relative URL is cleared when the first query parameter is set.
-            throw new AssertionError();
-        }
-        relativeUrl = relativeUrl.replace("{" + name + "}", canonicalizeForPath(value, encoded));
     }
 
     private static String canonicalizeForPath(String input, boolean alreadyEncoded) {
@@ -131,6 +94,31 @@ public class OKHttpRequestBuilder {
                 out.writeUtf8CodePoint(codePoint);
             }
         }
+    }
+
+    void setRelativeUrl(Object relativeUrl) {
+        if (relativeUrl == null) throw new NullPointerException("@Url parameter is null.");
+        this.relativeUrl = relativeUrl.toString();
+    }
+
+    void addHeader(String name, String value) {
+        if ("Content-Type".equalsIgnoreCase(name)) {
+            MediaType type = MediaType.parse(value);
+            if (type == null) {
+                throw new IllegalArgumentException("Malformed content type: " + value);
+            }
+            contentType = type;
+        } else {
+            requestBuilder.addHeader(name, value);
+        }
+    }
+
+    void addPathParam(String name, String value, boolean encoded) {
+        if (relativeUrl == null) {
+            // The relative URL is cleared when the first query parameter is set.
+            throw new AssertionError();
+        }
+        relativeUrl = relativeUrl.replace("{" + name + "}", canonicalizeForPath(value, encoded));
     }
 
     void addQueryParam(String name, String value, boolean encoded) {

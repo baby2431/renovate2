@@ -1,27 +1,28 @@
 package renovate;
 
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
-import java.util.function.Function;
-
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
-import renovate.call.*;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.WeakHashMap;
+import java.util.concurrent.Executor;
 
 import static java.util.Collections.unmodifiableList;
 import static renovate.Utils.checkNotNull;
 
 
+/**
+ * Renovate is based on object oriented ,Http request and response ibrary
+ *
+ * @author Sirius. contact : email:baby2431@gmail.com QQ:243107006
+ * @version 0.1
+ */
 public class Renovate {
 
     private okhttp3.Call.Factory callFactory;
@@ -46,40 +47,44 @@ public class Renovate {
     }
 
 
+    ObjectParser initObject(final Object object) {
 
-    private ObjectParser initObject(final Object object){
-        return clazzOP.computeIfAbsent(object.getClass(), new Function<Class, ObjectParser>() {
-            @Override
-            public ObjectParser apply(Class aClass) {
-                return new ObjectParser.Builder(Renovate.this, object).build();
-            }
-        });
+        if (clazzOP.containsKey(object.getClass())) {
+            return clazzOP.get(object.getClass());
+        } else {
+            clazzOP.put(object.getClass(), new ObjectParser.Builder(Renovate.this, object).build());
+        }
+
+        return clazzOP.get(object.getClass());
     }
 
-    public Request request(Object object){
+    public Request request(Object object) {
         ObjectParser objectParser = initObject(object);
-        return new Request(this,objectParser,object);
+        return new Request(this, objectParser, object);
     }
 
+    public Request request() {
+        return new Request(this);
+    }
 
     public List<Converter.Factory> converterFactories() {
         return converterFactories;
     }
 
-    public <T> Converter<ResponseBody, T> responseBodyConverter(Type type, Annotation[] annotations) {
-        return nextResponseBodyConverter(null, type, annotations);
+    <T> Converter<ResponseBody, T> responseBodyConverter(Type type, Annotation[] annotations) {
+        return nextResponseBodyConverter(type, annotations);
     }
 
 
-    public <T> Converter<ResponseBody, T> nextResponseBodyConverter(Converter.Factory skipPast,
-                                                                    Type type, Annotation[] annotations) {
+    <T> Converter<ResponseBody, T> nextResponseBodyConverter(
+            Type type, Annotation[] annotations) {
         checkNotNull(type, "type == null");
         checkNotNull(annotations, "annotations == null");
 
-        int start = converterFactories.indexOf(skipPast) + 1;
+        int start = 0;
         for (int i = start, count = converterFactories.size(); i < count; i++) {
             Converter<ResponseBody, ?> converter =
-                    converterFactories.get(i). responseBodyConverter(type, annotations, this);
+                    converterFactories.get(i).responseBodyConverter(type, annotations, this);
             if (converter != null) {
                 //noinspection unchecked
                 return (Converter<ResponseBody, T>) converter;
@@ -89,13 +94,11 @@ public class Renovate {
         StringBuilder builder = new StringBuilder("Could not locate ResponseBody converter for ")
                 .append(type)
                 .append(".\n");
-        if (skipPast != null) {
-            builder.append("  Skipped:");
-            for (int i = 0; i < start; i++) {
-                builder.append("\n   * ").append(converterFactories.get(i).getClass().getName());
-            }
-            builder.append('\n');
+        builder.append("  Skipped:");
+        for (int i = 0; i < start; i++) {
+            builder.append("\n   * ").append(converterFactories.get(i).getClass().getName());
         }
+        builder.append('\n');
         builder.append("  Tried:");
         for (int i = start, count = converterFactories.size(); i < count; i++) {
             builder.append("\n   * ").append(converterFactories.get(i).getClass().getName());
@@ -103,13 +106,13 @@ public class Renovate {
         throw new IllegalArgumentException(builder.toString());
     }
 
-    public <T> Converter<T, RequestBody> requestBodyConverter(Type type,
-                                                              Annotation[] parameterAnnotations) {
+    <T> Converter<T, RequestBody> requestBodyConverter(Type type,
+                                                       Annotation[] parameterAnnotations) {
         return nextRequestBodyConverter(null, type, parameterAnnotations);
     }
 
-    public <T> Converter<T, RequestBody> nextRequestBodyConverter(Converter.Factory skipPast,
-                                                                  Type type, Annotation[] parameterAnnotations) {
+    <T> Converter<T, RequestBody> nextRequestBodyConverter(Converter.Factory skipPast,
+                                                           Type type, Annotation[] parameterAnnotations) {
         checkNotNull(type, "type == null");
         checkNotNull(parameterAnnotations, "parameterAnnotations == null");
 
@@ -117,7 +120,7 @@ public class Renovate {
         for (int i = start, count = converterFactories.size(); i < count; i++) {
             Converter.Factory factory = converterFactories.get(i);
             Converter<?, RequestBody> converter =
-                    factory.requestBodyConverter(type, parameterAnnotations ,this);
+                    factory.requestBodyConverter(type, parameterAnnotations, this);
             if (converter != null) {
                 //noinspection unchecked
                 return (Converter<T, RequestBody>) converter;
@@ -145,13 +148,13 @@ public class Renovate {
         return baseUrl;
     }
 
-    public <T> Converter<T, String> stringConverter(Type type, Annotation[] annotations) {
+    <T> Converter<T, String> stringConverter(Type type, Annotation[] annotations) {
         checkNotNull(type, "type == null");
         checkNotNull(annotations, "annotations == null");
 
-        for (int i = 0, count = converterFactories.size(); i < count; i++) {
+        for (Converter.Factory converterFactory : converterFactories) {
             Converter<?, String> converter =
-                    converterFactories.get(i).stringConverter(type, annotations, this);
+                    converterFactory.stringConverter(type, annotations, this);
             if (converter != null) {
                 //noinspection unchecked
                 return (Converter<T, String>) converter;
@@ -165,9 +168,9 @@ public class Renovate {
 
     public static final class Builder {
         private final Platform platform;
+        private final List<Converter.Factory> converterFactories = new ArrayList<>();
         private okhttp3.Call.Factory callFactory;
         private HttpUrl baseUrl;
-        private final List<Converter.Factory> converterFactories = new ArrayList<>();
         private Executor callbackExecutor;
         private boolean validateEagerly;
 

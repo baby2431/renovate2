@@ -1,11 +1,7 @@
 import okhttp3.ResponseBody;
-import org.junit.Assert;
 import org.junit.Test;
-import renovate.Callback;
 import renovate.Renovate;
-import renovate.Response;
 import renovate.RxAdapter;
-import renovate.call.Call;
 import rx.Subscriber;
 
 import java.io.IOException;

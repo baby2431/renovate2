@@ -15,13 +15,13 @@
  */
 package renovate;
 
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import renovate.http.Streaming;
+
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 
 /**
  * response and request body converter

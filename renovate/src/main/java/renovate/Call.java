@@ -13,15 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package renovate.call;
+package renovate;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import okhttp3.Request;
 
-import renovate.Renovate;
-import renovate.Utils;
+import java.io.IOException;
 
-public interface CallAdapter<T> {
-  <R> T adapt(Call<R> call);
+public interface Call<T> extends Cloneable {
+  Response<T> execute() throws IOException;
+
+  void enqueue(Callback<T> callback);
+
+  boolean isExecuted();
+
+  void cancel();
+
+  boolean isCanceled();
+
+  Call<T> clone();
+
+  Request request();
 }

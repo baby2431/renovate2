@@ -16,8 +16,6 @@
 package renovate;
 
 
-import renovate.call.Call;
-
 public interface Callback<T> {
 
   void onResponse(Call<T> call, Response<T> response);

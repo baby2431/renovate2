@@ -23,9 +23,6 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-/**
- * Created by Sirius on 2017/3/24.
- */
 @Documented
 @Target(FIELD)
 @Retention(RUNTIME)

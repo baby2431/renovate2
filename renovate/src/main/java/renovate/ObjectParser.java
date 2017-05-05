@@ -1,5 +1,10 @@
 package renovate;
 
+import okhttp3.Headers;
+import okhttp3.*;
+import okhttp3.Request;
+import renovate.http.*;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -13,41 +18,11 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import okhttp3.Headers;
-import okhttp3.HttpUrl;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
-import renovate.http.Body;
-import renovate.http.FormUrlEncoded;
-import renovate.http.HTTP;
-import renovate.http.Header;
-import renovate.http.HeaderMap;
-import renovate.http.Ignore;
-import renovate.http.Multipart;
-import renovate.http.Params;
-import renovate.http.ParamsMap;
-import renovate.http.Part;
-import renovate.http.PartMap;
-import renovate.http.Path;
-import renovate.http.Query;
-import renovate.http.QueryMap;
-import renovate.http.QueryName;
-import renovate.http.Url;
-
-/**
- * Created by xmmc on 2017/3/24.
- */
-
-public class ObjectParser {
+class ObjectParser {
     // Upper and lower characters, digits, underscores, and hyphens, starting with a character.
     private static final String PARAM = "[a-zA-Z][a-zA-Z0-9_-]*";
     private static final Pattern PARAM_URL_REGEX = Pattern.compile("\\{(" + PARAM + ")\\}");
     private static final Pattern PARAM_NAME_REGEX = Pattern.compile(PARAM);
-    // FIXME: 2017/4/11 pojo
-    private okhttp3.Call.Factory callFactory;
     private final HttpUrl baseUrl;
     private final String httpMethod;
     private final String relativeUrl;
@@ -56,8 +31,9 @@ public class ObjectParser {
     private final boolean hasBody;
     private final boolean isFormEncoded;
     private final boolean isMultipart;
-    Map<Field, ParameterHandler> fieldParameterHandlerMap = new HashMap<>();
-    Class clazz;
+    private okhttp3.Call.Factory callFactory;
+    private Map<Field, ParameterHandler> fieldParameterHandlerMap = new HashMap<>();
+    private Class clazz;
 
     ObjectParser(Builder builder) {
         this.callFactory = builder.renovate.callFactory();
@@ -73,20 +49,26 @@ public class ObjectParser {
         this.clazz = builder.clazz;
     }
 
-    public Annotation[] getAnnotations(){
+    static Class<?> boxIfPrimitive(Class<?> type) {
+        if (boolean.class == type) return Boolean.class;
+        if (byte.class == type) return Byte.class;
+        if (char.class == type) return Character.class;
+        if (double.class == type) return Double.class;
+        if (float.class == type) return Float.class;
+        if (int.class == type) return Integer.class;
+        if (long.class == type) return Long.class;
+        if (short.class == type) return Short.class;
+        return type;
+    }
+
+    Annotation[] getAnnotations() {
         return clazz.getAnnotations();
     }
 
-    public Class getObjectClass(){
-        return clazz;
-    }
-
-
-    public Request toRequest(Object args) throws IOException {
+    Request toRequest(Object args) throws IOException {
         OKHttpRequestBuilder requestBuilder = new OKHttpRequestBuilder(httpMethod, baseUrl, relativeUrl, headers,
                 contentType, hasBody, isFormEncoded, isMultipart);
         try {
-            //FIXME
             for (Map.Entry<Field, ParameterHandler> handlerEntry : fieldParameterHandlerMap.entrySet()) {
                 ParameterHandler parameterHandler = handlerEntry.getValue();
                 handlerEntry.getKey().setAccessible(true);
@@ -99,10 +81,9 @@ public class ObjectParser {
         return requestBuilder.build();
     }
 
-    public okhttp3.Call.Factory getCallFactory() {
+    okhttp3.Call.Factory getCallFactory() {
         return callFactory;
     }
-
 
     static final class Builder {
         Renovate renovate;
@@ -126,23 +107,35 @@ public class ObjectParser {
         Set<String> relativeUrlParamNames;
         Map<Field, ParameterHandler> fieldParameterHandlerMap = new HashMap<>();
 
-        public Builder(Renovate renovate, Object object) {
+        Builder(Renovate renovate, Object object) {
             this.renovate = renovate;
             clazz = object.getClass();
             objectAnnotations = clazz.getAnnotations();
-            fields = clazz.getDeclaredFields();
+            Field[] totalField = new Field[clazz.getDeclaredFields().length + clazz.getFields().length];
+            System.arraycopy(clazz.getDeclaredFields(), 0, totalField, 0, clazz.getDeclaredFields().length);
+            System.arraycopy(clazz.getFields(), 0, totalField, clazz.getDeclaredFields().length, clazz.getFields().length);
+            fields = totalField;
             this.object = object;
-
         }
 
-        public ObjectParser build() {
+        static Set<String> parsePathParameters(String path) {
+            Matcher m = PARAM_URL_REGEX.matcher(path);
+            Set<String> patterns = new LinkedHashSet<>();
+            while (m.find()) {
+                patterns.add(m.group(1));
+            }
+            return patterns;
+        }
+
+        ObjectParser build() {
             for (Annotation annotation : objectAnnotations) {
                 parseHttpAnnotation(annotation);
             }
             if (httpMethod == null) {
                 throw objectError("HTTP method annotation is required (e.g., @GET, @POST, etc.).");
             }
-            if (!hasBody) {
+//            if hasBody is true then skip ,if false then isMultipart and isFromEncoded not true
+            if (!hasBody) { //if false ,no body,but has multipart or fromEncoded append err
                 if (isMultipart) {
                     throw objectError(
                             "Multipart can only be specified on HTTP methods with request body (e.g., @POST).");
@@ -153,9 +146,9 @@ public class ObjectParser {
                 }
             }
 
-            int parameterCount = fields.length;
-            for (int p = 0; p < parameterCount; p++) {
-                java.lang.reflect.Field field = fields[p];
+            int fieldCount = fields.length;
+            for (int p = 0; p < fieldCount; p++) {
+                Field field = fields[p];
                 Annotation[] annotations = field.getDeclaredAnnotations();
                 if (annotations == null || annotations.length == 0) {
                     System.out.println(String.format("field %s no renovate annotation found", field.getName()));
@@ -198,7 +191,6 @@ public class ObjectParser {
             }
             return result;
         }
-
 
         private ParameterHandler<?> parseClassAnnotation(
                 int p, Type type, Annotation[] annotations, Annotation annotation, Field field) {
@@ -383,7 +375,7 @@ public class ObjectParser {
                 return new ParameterHandler.HeaderMap<>(valueConverter);
 
             } else if (annotation instanceof Params) {
-                if (!isFormEncoded) {
+                if (!isFormEncoded) { // need @FormEncoded
                     throw objectError(p, "@Params parameters can only be used with form encoding.");
                 }
                 Params params = (Params) annotation;
@@ -449,8 +441,6 @@ public class ObjectParser {
                 }
                 Part part = (Part) annotation;
                 gotPart = true;
-
-                //// FIXME: 2017/4/10
                 String partName = part.value();
                 if ("".equals(partName)) {
                     partName = field.getName();
@@ -579,7 +569,6 @@ public class ObjectParser {
             return null; // Not a renovate annotation.
         }
 
-
         private void validatePathName(int p, String name) {
             if (!PARAM_NAME_REGEX.matcher(name).matches()) {
                 throw objectError(p, "@Path parameter name must match %s. Found: %s",
@@ -594,7 +583,7 @@ public class ObjectParser {
         private void parseHttpAnnotation(Annotation annotation) {
             if (annotation instanceof HTTP) {
                 HTTP http = (HTTP) annotation;
-                parseHttpMethodAndPath(http.method().name(), http.path(), http.hasBody());
+                parseHttpMethodAndPath(http.method(), http.path());
             } else if (annotation instanceof renovate.http.Headers) {
                 String[] headersToParse = ((renovate.http.Headers) annotation).value();
                 if (headersToParse.length == 0) {
@@ -614,13 +603,36 @@ public class ObjectParser {
             }
         }
 
-        private void parseHttpMethodAndPath(String httpMethod, String value, boolean hasBody) {
+        private void parseHttpMethodAndPath(HTTP.Method httpMethod, String value) {
             if (this.httpMethod != null) {
                 throw objectError("Only one HTTP method is allowed. Found: %s and %s.",
                         this.httpMethod, httpMethod);
             }
-            this.httpMethod = httpMethod;
-            this.hasBody = hasBody;
+            this.httpMethod = httpMethod.name();
+            switch (httpMethod) {
+                case DELETE:
+                    this.hasBody = false;
+                    break;
+                case GET:
+                    this.hasBody = false;
+                    break;
+                case HEAD:
+                    this.hasBody = false;
+                    break;
+                case PATCH:
+                    this.hasBody = true;
+                    break;
+                case POST:
+                    this.hasBody = true;
+                    break;
+                case PUT:
+                    this.hasBody = true;
+                    break;
+                case OPTIONS:
+                    this.hasBody = false;
+                    break;
+            }
+
             if (value == null || value.equals("")) {
                 return;
             }
@@ -639,17 +651,6 @@ public class ObjectParser {
             this.relativeUrl = value;
             this.relativeUrlParamNames = parsePathParameters(value);
         }
-
-
-        static Set<String> parsePathParameters(String path) {
-            Matcher m = PARAM_URL_REGEX.matcher(path);
-            Set<String> patterns = new LinkedHashSet();
-            while (m.find()) {
-                patterns.add(m.group(1));
-            }
-            return patterns;
-        }
-
 
         private Headers parseHeaders(String[] headers) {
             Headers.Builder builder = new Headers.Builder();
@@ -697,19 +698,6 @@ public class ObjectParser {
         }
 
 
-    }
-
-
-    static Class<?> boxIfPrimitive(Class<?> type) {
-        if (boolean.class == type) return Boolean.class;
-        if (byte.class == type) return Byte.class;
-        if (char.class == type) return Character.class;
-        if (double.class == type) return Double.class;
-        if (float.class == type) return Float.class;
-        if (int.class == type) return Integer.class;
-        if (long.class == type) return Long.class;
-        if (short.class == type) return Short.class;
-        return type;
     }
 
 

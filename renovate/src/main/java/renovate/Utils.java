@@ -15,29 +15,23 @@
  */
 package renovate;
 
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Array;
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.GenericDeclaration;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.lang.reflect.WildcardType;
-import java.util.Arrays;
-import java.util.NoSuchElementException;
-
 import okhttp3.ResponseBody;
 import okio.Buffer;
 
-public final class Utils {
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.*;
+import java.util.Arrays;
+import java.util.NoSuchElementException;
+
+final class Utils {
   static final Type[] EMPTY_TYPE_ARRAY = new Type[0];
 
   private Utils() {
     // No instances.
   }
 
-  public static Class<?> getRawType(Type type) {
+  static Class<?> getRawType(Type type) {
     if (type == null) throw new NullPointerException("type == null");
 
     if (type instanceof Class<?>) {
@@ -110,7 +104,7 @@ public final class Utils {
     }
   }
 
-  static Type getGenericSupertype(Type context, Class<?> rawType, Class<?> toResolve) {
+  private static Type getGenericSupertype(Type context, Class<?> rawType, Class<?> toResolve) {
     if (toResolve == rawType) return context;
 
     // We skip searching through interfaces if unknown is an interface.
@@ -167,7 +161,7 @@ public final class Utils {
         getGenericSupertype(context, contextRawType, supertype));
   }
 
-  static Type resolve(Type context, Class<?> contextRawType, Type toResolve) {
+  private static Type resolve(Type context, Class<?> contextRawType, Type toResolve) {
     // This implementation is made a little more complicated in an attempt to avoid object-creation.
     while (true) {
       if (toResolve instanceof TypeVariable) {
@@ -270,8 +264,8 @@ public final class Utils {
     return object;
   }
 
-  public static boolean isAnnotationPresent(Annotation[] annotations,
-      Class<? extends Annotation> cls) {
+  static boolean isAnnotationPresent(Annotation[] annotations,
+                                     Class<? extends Annotation> cls) {
     for (Annotation annotation : annotations) {
       if (cls.isInstance(annotation)) {
         return true;
@@ -279,25 +273,15 @@ public final class Utils {
     }
     return false;
   }
-  public static ResponseBody buffer(final ResponseBody body) throws IOException {
+
+  static ResponseBody buffer(final ResponseBody body) throws IOException {
     Buffer buffer = new Buffer();
     body.source().readAll(buffer);
     return ResponseBody.create(body.contentType(), body.contentLength(), buffer);
   }
 
-  static <T> void validateServiceInterface(Class<T> service) {
-    if (!service.isInterface()) {
-      throw new IllegalArgumentException("API declarations must be interfaces.");
-    }
-    // Prevent API interfaces from extending other interfaces. This not only avoids a bug in
-    // Android (http://b.android.com/58753) but it forces composition of API declarations which is
-    // the recommended pattern.
-    if (service.getInterfaces().length > 0) {
-      throw new IllegalArgumentException("API interfaces must not extend other interfaces.");
-    }
-  }
 
-  public static Type getParameterUpperBound(int index, ParameterizedType type) {
+  static Type getParameterUpperBound(int index, ParameterizedType type) {
     Type[] types = type.getActualTypeArguments();
     if (index < 0 || index >= types.length) {
       throw new IllegalArgumentException(
@@ -310,40 +294,6 @@ public final class Utils {
     return paramType;
   }
 
-  static boolean hasUnresolvableType(Type type) {
-    if (type instanceof Class<?>) {
-      return false;
-    }
-    if (type instanceof ParameterizedType) {
-      ParameterizedType parameterizedType = (ParameterizedType) type;
-      for (Type typeArgument : parameterizedType.getActualTypeArguments()) {
-        if (hasUnresolvableType(typeArgument)) {
-          return true;
-        }
-      }
-      return false;
-    }
-    if (type instanceof GenericArrayType) {
-      return hasUnresolvableType(((GenericArrayType) type).getGenericComponentType());
-    }
-    if (type instanceof TypeVariable) {
-      return true;
-    }
-    if (type instanceof WildcardType) {
-      return true;
-    }
-    String className = type == null ? "null" : type.getClass().getName();
-    throw new IllegalArgumentException("Expected a Class, ParameterizedType, or "
-        + "GenericArrayType, but <" + type + "> is of type " + className);
-  }
-
-  public static Type getCallResponseType(Type returnType) {
-    if (!(returnType instanceof ParameterizedType)) {
-      throw new IllegalArgumentException(
-          "Call return type must be parameterized as Call<Foo> or Call<? extends Foo>");
-    }
-    return getParameterUpperBound(0, (ParameterizedType) returnType);
-  }
 
   private static final class ParameterizedTypeImpl implements ParameterizedType {
     private final Type ownerType;

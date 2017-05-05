@@ -1,17 +1,14 @@
-
-import org.junit.Test;
-
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Type;
-import java.util.concurrent.CountDownLatch;
-
 import okhttp3.ResponseBody;
+import org.junit.Test;
+import renovate.Call;
 import renovate.Callback;
 import renovate.Renovate;
 import renovate.Response;
-import renovate.call.Call;
 import renovate.http.Ignore;
+
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.concurrent.CountDownLatch;
 
 public class TestParser {
 
@@ -22,7 +19,7 @@ public class TestParser {
 
         Class<Test> tClass = Test.class;
 
-        System.out.println(((Type) tClass));
+        System.out.println(tClass);
     }
 
 

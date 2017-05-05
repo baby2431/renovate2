@@ -15,12 +15,12 @@
  */
 package renovate;
 
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-
-import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
 
 public interface Converter<F, T> {
     T convert(F value) throws IOException;

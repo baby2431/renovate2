@@ -13,23 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package renovate.call;
-
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-import java.util.concurrent.Executor;
+package renovate;
 
 import okhttp3.Request;
-import renovate.Callback;
-import renovate.Renovate;
-import renovate.Response;
-import renovate.Utils;
+
+import java.io.IOException;
+import java.util.concurrent.Executor;
 
 public final class ExecutorCallAdapter<T> implements CallAdapter<Call<T>>{
-  final Executor callbackExecutor;
+  private final Executor callbackExecutor;
 
-  public ExecutorCallAdapter(Executor callbackExecutor) {
+  ExecutorCallAdapter(Executor callbackExecutor) {
     this.callbackExecutor = callbackExecutor;
   }
 

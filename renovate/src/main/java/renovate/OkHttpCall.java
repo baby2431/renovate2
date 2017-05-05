@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package renovate.call;
-
-import java.io.IOException;
+package renovate;
 
 import okhttp3.MediaType;
 import okhttp3.Request;
@@ -24,7 +22,8 @@ import okio.Buffer;
 import okio.BufferedSource;
 import okio.ForwardingSource;
 import okio.Okio;
-import renovate.*;
+
+import java.io.IOException;
 
 public final class OkHttpCall<T> implements Call<T> {
   private final ObjectParser objectParser;
@@ -38,7 +37,7 @@ public final class OkHttpCall<T> implements Call<T> {
   private boolean executed;
   private Converter<ResponseBody, ?> responseConverter;
 
-  public OkHttpCall(ObjectParser objectParser, Object args,Converter<ResponseBody, ?> responseConverter) {
+  OkHttpCall(ObjectParser objectParser, Object args, Converter<ResponseBody, ?> responseConverter) {
     this.objectParser = objectParser;
     this.args = args;
     this.responseConverter = responseConverter;
@@ -46,7 +45,7 @@ public final class OkHttpCall<T> implements Call<T> {
 
   @SuppressWarnings("CloneDoesntCallSuperClone") // We are a final type & this saves clearing state.
   @Override public OkHttpCall<T> clone() {
-    return new OkHttpCall<T>(objectParser, args,responseConverter);
+    return new OkHttpCall<>(objectParser, args, responseConverter);
   }
 
   @Override public synchronized Request request() {
@@ -187,7 +186,7 @@ public final class OkHttpCall<T> implements Call<T> {
     return call;
   }
 
-  Response<T> parseResponse(okhttp3.Response rawResponse) throws IOException {
+  private Response<T> parseResponse(okhttp3.Response rawResponse) throws IOException {
     ResponseBody rawBody = rawResponse.body();
 
     // Remove the body's source (the only stateful object) so we can pass the response along.

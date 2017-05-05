@@ -20,9 +20,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 
-import renovate.call.CallAdapter;
-import renovate.call.DefaultCallAdapter;
-import renovate.call.ExecutorCallAdapter;
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -62,9 +59,6 @@ class Platform {
     return DefaultCallAdapter.INSTANCE;
   }
 
-  boolean isDefaultMethod(Method method) {
-    return false;
-  }
 
   Object invokeDefaultMethod(Method method, Class<?> declaringClass, Object object, Object... args)
       throws Throwable {
@@ -73,9 +67,6 @@ class Platform {
 
 //  @IgnoreJRERequirement // Only classloaded and used on Java 8.
   static class Java8 extends Platform {
-    @Override boolean isDefaultMethod(Method method) {
-      return method.isDefault();
-    }
 
     @Override Object invokeDefaultMethod(Method method, Class<?> declaringClass, Object object,
         Object... args) throws Throwable {
