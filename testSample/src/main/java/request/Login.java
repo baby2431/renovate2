@@ -10,11 +10,9 @@ import renovate.http.Params;
 @HTTP(method = HTTP.Method.POST, path = "api/member/login")
 @FormUrlEncoded
 public class Login implements Accept {
-    //Query mobile
     @Params(value = "mobile")
     public String mobile;
 
-    //Query password
     @Params(value = "password")
     public String password;
 
