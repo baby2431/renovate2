@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Square, Inc.
+ * Copyright (C) 2017 Sirius, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,16 @@ import okhttp3.Request;
 import okhttp3.ResponseBody;
 
 public final class Response<T> {
+  private final okhttp3.Response rawResponse;
+  private final T body;
+  private final ResponseBody errorBody;
+
+  private Response(okhttp3.Response rawResponse, T body, ResponseBody errorBody) {
+    this.rawResponse = rawResponse;
+    this.body = body;
+    this.errorBody = errorBody;
+  }
+
   public static <T> Response<T> success(T body) {
     return success(body, new okhttp3.Response.Builder() //
         .code(200)
@@ -65,16 +75,6 @@ public final class Response<T> {
       throw new IllegalArgumentException("rawResponse should not be successful response");
     }
     return new Response<>(rawResponse, null, body);
-  }
-
-  private final okhttp3.Response rawResponse;
-  private final T body;
-  private final ResponseBody errorBody;
-
-  private Response(okhttp3.Response rawResponse, T body, ResponseBody errorBody) {
-    this.rawResponse = rawResponse;
-    this.body = body;
-    this.errorBody = errorBody;
   }
 
   public okhttp3.Response raw() {

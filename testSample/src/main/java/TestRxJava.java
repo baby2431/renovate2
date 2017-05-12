@@ -1,5 +1,4 @@
 import okhttp3.ResponseBody;
-import org.junit.Test;
 import renovate.Renovate;
 import renovate.RxAdapter;
 import rx.Subscriber;
@@ -11,7 +10,6 @@ public class TestRxJava {
 
     PersonModel p = new PersonModel();
 
-    @Test
     public void testRxJavaBase() throws InterruptedException {
         final CountDownLatch countDownLatch = new CountDownLatch(1);
         p.age = 123123;

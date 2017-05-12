@@ -10,7 +10,8 @@ dependencies {
     compile project(':renovate')
     compile 'io.reactivex:rxjava:1.2.0'
     compile 'io.reactivex:rxandroid:1.2.1'
-    testCompile 'junit:junit:4.12'
+
+
 }
 version = "0.2"
 def siteUrl = 'https://github.com/baby2431/renovate'                        // #CONFIG# // project homepage

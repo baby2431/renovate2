@@ -1,32 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module external.linked.project.id=":renovate" external.linked.project.path="$MODULE_DIR$/../../../renovate" external.root.project.path="$MODULE_DIR$/../../.." external.system.id="GRADLE" external.system.module.group="renovate2" external.system.module.version="0.2" type="JAVA_MODULE" version="4">
-  <component name="NewModuleRootManager">
-    <output url="file://$MODULE_DIR$/../../../renovate/build/classes/main" />
-    <output-test url="file://$MODULE_DIR$/../../../renovate/build/classes/test" />
+<module external.linked.project.id=":renovate" external.linked.project.path="$MODULE_DIR$/../../../renovate" external.root.project.path="$MODULE_DIR$/../../.." external.system.id="GRADLE" external.system.module.group="renovate2" external.system.module.version="0.1.1" type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
     <content url="file://$MODULE_DIR$/../../../renovate">
-      <sourceFolder url="file://$MODULE_DIR$/../../../renovate/src/main/java" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/../../../renovate/src/test/java" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/../../../renovate/src/main/resources" type="java-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/../../../renovate/src/test/resources" type="java-test-resource" />
       <excludeFolder url="file://$MODULE_DIR$/../../../renovate/.gradle" />
       <excludeFolder url="file://$MODULE_DIR$/../../../renovate/build" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Gradle: com.squareup.okhttp3:okhttp:3.3.1" level="project" />
-    <orderEntry type="library" name="Gradle: com.google.code.gson:gson:2.6.2" level="project" />
-    <orderEntry type="library" name="Gradle: com.squareup.okio:okio:1.8.0" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: junit:junit:4.12" level="project" />
-    <orderEntry type="library" scope="TEST" name="Gradle: org.hamcrest:hamcrest-core:1.3" level="project" />
-    <orderEntry type="library" name="Gradle: com.google.android:android:4.1.1.4" level="project" />
-    <orderEntry type="library" name="Gradle: commons-logging:commons-logging:1.1.1" level="project" />
-    <orderEntry type="library" name="Gradle: org.apache.httpcomponents:httpclient:4.0.1" level="project" />
-    <orderEntry type="library" name="Gradle: org.khronos:opengl-api:gl1.1-android-2.1_r1" level="project" />
-    <orderEntry type="library" name="Gradle: xerces:xmlParserAPIs:2.6.2" level="project" />
-    <orderEntry type="library" name="Gradle: xpp3:xpp3:1.1.4c" level="project" />
-    <orderEntry type="library" name="Gradle: org.json:json:20080701" level="project" />
-    <orderEntry type="library" name="Gradle: org.apache.httpcomponents:httpcore:4.0.1" level="project" />
-    <orderEntry type="library" name="Gradle: commons-codec:commons-codec:1.3" level="project" />
   </component>
 </module>

@@ -1,2 +1,2 @@
-// Copyright 2014 Square, Inc.
+// Copyright 2017 Sirius, Inc.
 package renovate.http;
