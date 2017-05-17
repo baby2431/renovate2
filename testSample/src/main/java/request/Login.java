@@ -4,9 +4,6 @@ import renovate.http.FormUrlEncoded;
 import renovate.http.HTTP;
 import renovate.http.Params;
 
-/**
- * Created by babyt on 2017/5/3.
- */
 @HTTP(method = HTTP.Method.POST, path = "api/member/login")
 @FormUrlEncoded
 public class Login implements Accept {

@@ -1,13 +1,12 @@
-import renovate.http.HTTP;
-import renovate.http.Ignore;
-import renovate.http.Params;
-import renovate.http.Query;
+import renovate.http.*;
 
-/**
- * Created by xmmc on 2017/3/29.
- */
-@HTTP(method = HTTP.Method.GET, path = "Servlet")
+
+@HTTP(method = HTTP.Method.GET, path = "Test/Servlet")
 public class PersonModel {
+
+    @Header
+    String authorization = "ASDASDASD";
+
 
     @Query
     String name;

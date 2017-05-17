@@ -2,9 +2,6 @@ package request;
 
 import renovate.http.Header;
 
-/**
- * Created by babyt on 2017/5/3.
- */
 
 interface Accept {
     //Accept

@@ -6,9 +6,6 @@ import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
-/**
- * Created by babyt on 2017/5/4.
- */
 
 public class FastJsonConvert<T> implements ResponseConvert<T> {
 

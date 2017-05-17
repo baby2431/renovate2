@@ -49,6 +49,7 @@ class ObjectParser {
     private okhttp3.Call.Factory callFactory;
     private Map<Field, ParameterHandler> fieldParameterHandlerMap = new HashMap<>();
     private Class clazz;
+    private Renovate renovate;
 
     ObjectParser(Builder builder) {
         this.callFactory = builder.renovate.callFactory();
@@ -62,6 +63,7 @@ class ObjectParser {
         this.isMultipart = builder.isMultipart;
         this.fieldParameterHandlerMap = builder.fieldParameterHandlerMap;
         this.clazz = builder.clazz;
+        this.renovate = builder.renovate;
     }
 
     static Class<?> boxIfPrimitive(Class<?> type) {
@@ -80,7 +82,9 @@ class ObjectParser {
         return clazz.getAnnotations();
     }
 
-    Request toRequest(Object args) throws IOException {
+    Request toRequest(Object args, Map<String, String> headerMap) throws IOException {
+
+
         OKHttpRequestBuilder requestBuilder = new OKHttpRequestBuilder(httpMethod, baseUrl, relativeUrl, headers,
                 contentType, hasBody, isFormEncoded, isMultipart);
         try {
@@ -89,6 +93,15 @@ class ObjectParser {
                 handlerEntry.getKey().setAccessible(true);
                 parameterHandler.apply(requestBuilder, handlerEntry.getKey().get(args));
             }
+            if (headerMap == null) {
+                headerMap = new HashMap<>();
+            }
+            headerMap.putAll(renovate.getCommonHeader());
+            for (String s : headerMap.keySet()) {
+                requestBuilder.addHeader(s,headerMap.get(s));
+            }
+
+
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
@@ -493,7 +506,6 @@ class ObjectParser {
                     Headers headers =
                             Headers.of("Content-Disposition", "form-data; name=\"" + partName + "\"",
                                     "Content-Transfer-Encoding", part.encoding());
-
                     if (Iterable.class.isAssignableFrom(rawParameterType)) {
                         if (!(type instanceof ParameterizedType)) {
                             throw objectError(p, rawParameterType.getSimpleName()
@@ -517,14 +529,14 @@ class ObjectParser {
                                     + "include a part name in the annotation.");
                         }
                         Converter<?, RequestBody> converter =
-                                renovate.requestBodyConverter(arrayComponentType, annotations );
+                                renovate.requestBodyConverter(arrayComponentType, annotations);
                         return new ParameterHandler.Part<>(headers, converter).array();
                     } else if (MultipartBody.Part.class.isAssignableFrom(rawParameterType)) {
                         throw objectError(p, "@Part parameters using the MultipartBody.Part must not "
                                 + "include a part name in the annotation.");
                     } else {
                         Converter<?, RequestBody> converter =
-                                renovate.requestBodyConverter(type, annotations );
+                                renovate.requestBodyConverter(type, annotations);
                         return new ParameterHandler.Part<>(headers, converter);
                     }
                 }
@@ -556,7 +568,7 @@ class ObjectParser {
                 }
 
                 Converter<?, RequestBody> valueConverter =
-                        renovate.requestBodyConverter(valueType, annotations );
+                        renovate.requestBodyConverter(valueType, annotations);
 
                 PartMap partMap = (PartMap) annotation;
                 return new ParameterHandler.PartMap<>(valueConverter, partMap.encoding());
@@ -572,7 +584,7 @@ class ObjectParser {
 
                 Converter<?, RequestBody> converter;
                 try {
-                    converter = renovate.requestBodyConverter(type, annotations );
+                    converter = renovate.requestBodyConverter(type, annotations);
                 } catch (RuntimeException e) {
                     // Wide exception range because factories are user code.
                     throw objectError(e, p, "Unable to create @Body converter for %s", type);

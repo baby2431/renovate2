@@ -1,10 +1,6 @@
 package response;
 
 
-/**
- * Created by babyt on 2017/5/4.
- */
-
 public class LoginResponse extends BaseResponse {
 
 

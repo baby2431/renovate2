@@ -5,10 +5,6 @@ import response.LoginResponse;
 import rx.Observable;
 import rx.functions.Func1;
 
-/**
- * Created by babyt on 2017/5/3.
- */
-
 public class HttpService {
     private static HttpService httpService;
     private static Renovate renovate;

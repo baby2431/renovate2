@@ -1,8 +1,5 @@
 package response;
 
-/**
- * Created by babyt on 2017/5/3.
- */
 
 public class BaseResponse {
 

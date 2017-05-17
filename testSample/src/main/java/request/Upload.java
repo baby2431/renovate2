@@ -8,9 +8,6 @@ import renovate.http.PartMap;
 import java.io.File;
 import java.util.Map;
 
-/**
- * Created by Sirius on 2017/5/12.
- */
 @HTTP(method = HTTP.Method.POST, path = "api/member/login")
 @FormUrlEncoded
 public class Upload {

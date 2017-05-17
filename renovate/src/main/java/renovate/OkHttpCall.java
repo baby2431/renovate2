@@ -24,6 +24,8 @@ import okio.ForwardingSource;
 import okio.Okio;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public final class OkHttpCall<T> implements Call<T> {
   private final ObjectParser objectParser;
@@ -36,16 +38,17 @@ public final class OkHttpCall<T> implements Call<T> {
   private Throwable creationFailure; // Either a RuntimeException or IOException.
   private boolean executed;
   private Converter<ResponseBody, ?> responseConverter;
-
-  OkHttpCall(ObjectParser objectParser, Object args, Converter<ResponseBody, ?> responseConverter) {
+  private Map<String,String> headerMap = new HashMap<>();
+  OkHttpCall(ObjectParser objectParser, Object args, Converter<ResponseBody, ?> responseConverter, Map<String,String> headersMap) {
     this.objectParser = objectParser;
     this.args = args;
     this.responseConverter = responseConverter;
+    this.headerMap = headersMap;
   }
 
   @SuppressWarnings("CloneDoesntCallSuperClone") // We are a final type & this saves clearing state.
   @Override public OkHttpCall<T> clone() {
-    return new OkHttpCall<>(objectParser, args, responseConverter);
+    return new OkHttpCall<>(objectParser, args, responseConverter,headerMap);
   }
 
   @Override public synchronized Request request() {
@@ -178,7 +181,7 @@ public final class OkHttpCall<T> implements Call<T> {
   }
 
   private okhttp3.Call createRawCall() throws IOException {
-    Request request = objectParser.toRequest(args);
+    Request request = objectParser.toRequest(args,headerMap);
     okhttp3.Call call = objectParser.getCallFactory().newCall(request);
     if (call == null) {
       throw new NullPointerException("Call.Factory returned null.");

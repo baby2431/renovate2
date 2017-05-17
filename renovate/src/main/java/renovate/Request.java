@@ -17,13 +17,33 @@ package renovate;
 
 import okhttp3.ResponseBody;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Request {
     private ObjectParser objectParser;
     private Object object;
     private Renovate renovate;
+    private Map<String, String> headerMap = new HashMap<>();
+
+    public void addHeader(String name, String value) {
+        headerMap.put(name, value);
+    }
+
+    public void setHeader(Map<String, String> map) {
+        headerMap = map;
+    }
+
+    Map<String, String> getHeader() {
+        return headerMap;
+    }
 
     Request(Renovate renovate) {
         this.renovate = renovate;
+    }
+
+    public void removeHeader(String key) {
+        headerMap.remove(key);
     }
 
     Request(Renovate renovate, ObjectParser objectParser, Object object) {
@@ -31,6 +51,7 @@ public class Request {
         this.objectParser = objectParser;
         this.object = object;
     }
+
 
 
     public <T, E> E request(ResponseConvert<T> converter, CallAdapter<E> adapter) {
@@ -42,15 +63,15 @@ public class Request {
     }
 
     public <T> Call<T> request(ResponseConvert<T> converter) {
-        return new OkHttpCall<>(objectParser, object, converter);
+        return new OkHttpCall<>(objectParser, object, converter,headerMap);
     }
 
     public <T> Call<T> request(Object object, ResponseConvert<T> converter) {
-        return new OkHttpCall<>(renovate.initObject(object), object, converter);
+        return new OkHttpCall<>(renovate.initObject(object), object, converter,headerMap);
     }
 
     public Call<ResponseBody> request() {
-        return new OkHttpCall<>(renovate.initObject(object), object, renovate.responseBodyConverter(ResponseBody.class, objectParser.getAnnotations()));
+        return new OkHttpCall<>(renovate.initObject(object), object, renovate.responseBodyConverter(ResponseBody.class, objectParser.getAnnotations()),headerMap);
     }
 }
 
