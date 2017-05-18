@@ -20,7 +20,7 @@ public class TestHeader {
         p.name = "xiao wenwen";
 
         Renovate renovate = new Renovate.Builder().baseUrl("http://localhost:8080/").build();
-        renovate.addCommonHeader("Content-type","text/html");
+        renovate.addHeader("Content-type", "text/html");
         Request request = renovate.request(p);
         request.addHeader("Authorization","imrequestheader");
         request(countDownLatch, request);
@@ -35,7 +35,7 @@ public class TestHeader {
         p.name = "xiao wenwen";
 
         Renovate renovate = new Renovate.Builder().baseUrl("http://localhost:8080/").build();
-        renovate.addCommonHeader("Authorization","imcommonheader");
+        renovate.addHeader("Authorization", "imcommonheader");
         Request request = renovate.request(p);
         request(countDownLatch, request);
         countDownLatch.await();

@@ -26,6 +26,7 @@ public class TestParser {
     @Test
     public void test() throws InterruptedException {
         final CountDownLatch countDownLatch = new CountDownLatch(1);
+        PersonModel p = new PersonModel();
         p.age = 123123;
         p.name = "xiao wenwen";
         System.out.println("current thread = " + Thread.currentThread().getName());

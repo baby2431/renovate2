@@ -23,7 +23,9 @@ import okhttp3.ResponseBody;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.WeakHashMap;
 import java.util.concurrent.Executor;
 
 import static java.util.Collections.unmodifiableList;
@@ -36,30 +38,14 @@ import static renovate.Utils.checkNotNull;
  * @author Sirius. contact : email:baby2431@gmail.com QQ:243107006
  * @version 0.1
  */
-public class Renovate {
+public class Renovate extends HeaderCURD {
     private okhttp3.Call.Factory callFactory;
     private HttpUrl baseUrl;
     private List<Converter.Factory> converterFactories;
     private Executor callbackExecutor;
     private boolean validateEagerly;
     private WeakHashMap<Class, ObjectParser> clazzOP = new WeakHashMap<>();
-    private Map<String, String> headerMap = new HashMap<>();
 
-    public void addCommonHeader(String name, String value) {
-        headerMap.put(name, value);
-    }
-
-    public void setCommonHeader(Map<String, String> map) {
-        headerMap = map;
-    }
-
-    Map<String, String> getCommonHeader() {
-        return headerMap;
-    }
-
-    public void removeHeader(String key) {
-        headerMap.remove(key);
-    }
 
 
     Renovate(okhttp3.Call.Factory callFactory, HttpUrl baseUrl,

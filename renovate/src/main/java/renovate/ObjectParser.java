@@ -96,7 +96,7 @@ class ObjectParser {
             if (headerMap == null) {
                 headerMap = new HashMap<>();
             }
-            headerMap.putAll(renovate.getCommonHeader());
+            headerMap.putAll(renovate.getHeader());
             for (String s : headerMap.keySet()) {
                 requestBuilder.addHeader(s,headerMap.get(s));
             }

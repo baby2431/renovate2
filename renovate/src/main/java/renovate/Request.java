@@ -17,34 +17,18 @@ package renovate;
 
 import okhttp3.ResponseBody;
 
-import java.util.HashMap;
-import java.util.Map;
-
-public class Request {
+public class Request extends HeaderCURD {
     private ObjectParser objectParser;
     private Object object;
     private Renovate renovate;
-    private Map<String, String> headerMap = new HashMap<>();
 
-    public void addHeader(String name, String value) {
-        headerMap.put(name, value);
-    }
 
-    public void setHeader(Map<String, String> map) {
-        headerMap = map;
-    }
 
-    Map<String, String> getHeader() {
-        return headerMap;
-    }
 
     Request(Renovate renovate) {
         this.renovate = renovate;
     }
 
-    public void removeHeader(String key) {
-        headerMap.remove(key);
-    }
 
     Request(Renovate renovate, ObjectParser objectParser, Object object) {
         this(renovate);
