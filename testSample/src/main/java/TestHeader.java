@@ -1,5 +1,4 @@
 import okhttp3.ResponseBody;
-import org.junit.Test;
 import renovate.Renovate;
 import renovate.Request;
 import renovate.RxAdapter;
@@ -12,22 +11,21 @@ import java.util.concurrent.CountDownLatch;
 public class TestHeader {
 
     PersonModel p = new PersonModel();
-    @Test
     public void uploadHead() throws InterruptedException {
 
         final CountDownLatch countDownLatch = new CountDownLatch(1);
         p.age = 123123;
         p.name = "xiao wenwen";
 
-        Renovate renovate = new Renovate.Builder().baseUrl("http://localhost:8080/").build();
-        renovate.addHeader("Content-type", "text/html");
+        Renovate renovate = new Renovate.Builder()
+                .addHeader("Content-type", "text/html")
+                .baseUrl("http://localhost:8080/").build();
         Request request = renovate.request(p);
         request.addHeader("Authorization","imrequestheader");
         request(countDownLatch, request);
         countDownLatch.await();
         System.out.println("end");
     }
-    @Test
     public void uploadOnlyCommonHead() throws InterruptedException {
 
         final CountDownLatch countDownLatch = new CountDownLatch(1);

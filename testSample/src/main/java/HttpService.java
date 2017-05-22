@@ -10,7 +10,7 @@ public class HttpService {
     private static Renovate renovate;
 
     private HttpService() {
-        renovate = new Renovate.Builder().baseUrl("http://yxback.ftvcn.com:5051/").build();
+        renovate = new Renovate.Builder().baseUrl("http://localhost:8080/").build();
     }
 
     public static HttpService instance() {

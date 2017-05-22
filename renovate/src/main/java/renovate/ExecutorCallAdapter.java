@@ -20,7 +20,7 @@ import okhttp3.Request;
 import java.io.IOException;
 import java.util.concurrent.Executor;
 
-public final class ExecutorCallAdapter<T> implements CallAdapter<Call<T>>{
+final class ExecutorCallAdapter<T> implements CallAdapter<Call<T>> {
   private final Executor callbackExecutor;
 
   ExecutorCallAdapter(Executor callbackExecutor) {

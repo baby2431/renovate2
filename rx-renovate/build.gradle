@@ -13,7 +13,7 @@ dependencies {
 
 
 }
-version = "0.2"
+version = "0.3"
 def siteUrl = 'https://github.com/baby2431/renovate'                        // #CONFIG# // project homepage
 def gitUrl = 'https://github.com/baby2431/renovate.git'                     // #CONFIG# // project git // #CONFIG# // Maven Group ID for the artifact (pageckage name is ok)
 
@@ -60,7 +60,8 @@ install {
         // This generates POM.xml with proper parameters
         pom {
             project {
-                packaging 'aar'
+                groupId 'org.sirius.renovate'
+                artifactId 'rx-renovate'
                 // Add your description here
                 name 'Support Android and Java, okhttp based object HTTP network request Library'     //项目的描述 你可以多写一点
                 url siteUrl
@@ -73,7 +74,7 @@ install {
                 }
                 developers {
                     developer {
-                        id 'lemon'        //填写的一些基本信息
+                        id 'Sirius'        //填写的一些基本信息
                         name 'Sirius'
                         email '243107006@qq.com'
                     }
@@ -94,7 +95,7 @@ bintray {
     pkg {
         // userOrg = "lemon" //这个是你创建时的organization,必须要有，不然没办法找到指定路径
         repo = "maven" //这个仓库必须在 ‘shang’这个organization下，必须在网页上创建成功，否则还是无法找到 repo
-        name = "lemon.rxadaptr" //发布到JCenter上的项目名字
+        name = "rx-renovate" //发布到JCenter上的项目名字
         websiteUrl = siteUrl
         vcsUrl = gitUrl
         licenses = ["Apache-2.0"]

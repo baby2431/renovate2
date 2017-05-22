@@ -6,7 +6,7 @@ import java.util.Map;
 /**
  * Created by babyt on 2017/5/18.
  */
-public abstract class HeaderCURD {
+abstract class HeaderCURD {
 
     protected Map<String, String> headerMap = new HashMap<>();
 
@@ -30,12 +30,12 @@ public abstract class HeaderCURD {
         headerMap.remove(key);
     }
 
-    public boolean hasHeader(String key) {
-        return headerMap.containsKey(key);
+    public void hasHeader(String key) {
+        headerMap.containsKey(key);
     }
 
-    public String findHeader(String key) {
-        return headerMap.get(key);
+    public void findHeader(String key) {
+        headerMap.get(key);
     }
 
 }

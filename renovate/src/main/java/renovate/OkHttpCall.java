@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class OkHttpCall<T> implements Call<T> {
+final class OkHttpCall<T> implements Call<T> {
   private final ObjectParser objectParser;
   private final Object args;
 

@@ -22,21 +22,15 @@ public class Request extends HeaderCURD {
     private Object object;
     private Renovate renovate;
 
-
-
-
     Request(Renovate renovate) {
         this.renovate = renovate;
     }
-
 
     Request(Renovate renovate, ObjectParser objectParser, Object object) {
         this(renovate);
         this.objectParser = objectParser;
         this.object = object;
     }
-
-
 
     public <T, E> E request(ResponseConvert<T> converter, CallAdapter<E> adapter) {
         return adapter.adapt(request(converter));

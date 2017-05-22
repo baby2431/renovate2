@@ -470,9 +470,6 @@ class ObjectParser {
                 Part part = (Part) annotation;
                 gotPart = true;
                 String partName = part.value();
-                if ("".equals(partName)) {
-                    partName = field.getName();
-                }
                 Class<?> rawParameterType = Utils.getRawType(type);
                 if (partName.isEmpty()) {
                     if (Iterable.class.isAssignableFrom(rawParameterType)) {

@@ -23,9 +23,7 @@ import okhttp3.ResponseBody;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.concurrent.Executor;
 
 import static java.util.Collections.unmodifiableList;
@@ -38,24 +36,22 @@ import static renovate.Utils.checkNotNull;
  * @author Sirius. contact : email:baby2431@gmail.com QQ:243107006
  * @version 0.1
  */
-public class Renovate extends HeaderCURD {
+public final class Renovate extends HeaderCURD {
+    Platform platform;
     private okhttp3.Call.Factory callFactory;
     private HttpUrl baseUrl;
     private List<Converter.Factory> converterFactories;
     private Executor callbackExecutor;
-    private boolean validateEagerly;
     private WeakHashMap<Class, ObjectParser> clazzOP = new WeakHashMap<>();
-
-
-
     Renovate(okhttp3.Call.Factory callFactory, HttpUrl baseUrl,
              List<Converter.Factory> converterFactories,
-             Executor callbackExecutor, boolean validateEagerly, Platform platform) {
+             Executor callbackExecutor, Platform platform, Map<String, String> headerMap) {
         this.callFactory = callFactory;
         this.baseUrl = baseUrl;
         this.converterFactories = unmodifiableList(converterFactories); // Defensive copy at call site.
         this.callbackExecutor = callbackExecutor;
-        this.validateEagerly = validateEagerly;
+        this.platform = platform;
+        this.headerMap = headerMap;
     }
 
     public okhttp3.Call.Factory callFactory() {
@@ -185,11 +181,10 @@ public class Renovate extends HeaderCURD {
     public static final class Builder {
         private final Platform platform;
         private final List<Converter.Factory> converterFactories = new ArrayList<>();
+        protected Map<String, String> headerMap = new HashMap<>();
         private okhttp3.Call.Factory callFactory;
         private HttpUrl baseUrl;
         private Executor callbackExecutor;
-        private boolean validateEagerly;
-
         Builder(Platform platform) {
             this.platform = platform;
             // Add the built-in converter factory first. This prevents overriding its behavior but also
@@ -201,14 +196,23 @@ public class Renovate extends HeaderCURD {
             this(Platform.get());
         }
 
-        Builder(Renovate retrofit) {
+        Builder(Renovate renovate) {
             platform = Platform.get();
-            callFactory = retrofit.callFactory;
-            baseUrl = retrofit.baseUrl;
-            converterFactories.addAll(retrofit.converterFactories);
+            callFactory = renovate.callFactory;
+            baseUrl = renovate.baseUrl;
+            converterFactories.addAll(renovate.converterFactories);
             // Remove the default, platform-aware call adapter added by build().
-            callbackExecutor = retrofit.callbackExecutor;
-            validateEagerly = retrofit.validateEagerly;
+            callbackExecutor = renovate.callbackExecutor;
+        }
+
+        public Builder addHeader(String name, String value) {
+            headerMap.put(name, value);
+            return this;
+        }
+
+        public Builder setHeader(Map<String, String> map) {
+            headerMap.putAll(map);
+            return this;
         }
 
         public Builder client(OkHttpClient client) {
@@ -255,12 +259,6 @@ public class Renovate extends HeaderCURD {
         }
 
 
-        public Builder validateEagerly(boolean validateEagerly) {
-            this.validateEagerly = validateEagerly;
-            return this;
-        }
-
-
         public Renovate build() {
             if (baseUrl == null) {
                 throw new IllegalStateException("Base URL required.");
@@ -281,7 +279,7 @@ public class Renovate extends HeaderCURD {
             List<Converter.Factory> converterFactories = new ArrayList<>(this.converterFactories);
 
             return new Renovate(callFactory, baseUrl, converterFactories,
-                    callbackExecutor, validateEagerly, platform);
+                    callbackExecutor, platform, headerMap);
         }
     }
 

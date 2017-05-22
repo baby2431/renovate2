@@ -37,11 +37,8 @@ public class TestRxJava {
                 countDownLatch.countDown();
             }
         });
-
         countDownLatch.await();
         System.out.println("end");
-
-
     }
 
 

@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+         xmlns="http://maven.apache.org/POM/4.0.0">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>renovate2</groupId>
+  <groupId>org.sirius.renovate</groupId>
   <artifactId>renovate</artifactId>
-  <version>0.1</version>
-  <name>A simple file download manager support by okHttp</name>
-  <url>https://github.com/baby2431/renovate</url>
+  <version>0.3</version>
+  <name>Support Android and Java, okhttp based object HTTP network request Library</name>
+  <url>https://github.com/baby2431/renovate2</url>
   <licenses>
     <license>
       <name>The Apache Software License, Version 2.0</name>
@@ -15,15 +16,15 @@
   </licenses>
   <developers>
     <developer>
-      <id>lemon</id>
+      <id>Sirius</id>
       <name>Sirius</name>
       <email>243107006@qq.com</email>
     </developer>
   </developers>
   <scm>
-    <connection>https://github.com/baby2431/renovate.git</connection>
-    <developerConnection>https://github.com/baby2431/renovate.git</developerConnection>
-    <url>https://github.com/baby2431/renovate</url>
+    <connection>https://github.com/baby2431/renovate2.git</connection>
+    <developerConnection>https://github.com/baby2431/renovate2.git</developerConnection>
+    <url>https://github.com/baby2431/renovate2</url>
   </scm>
   <dependencies>
     <dependency>
