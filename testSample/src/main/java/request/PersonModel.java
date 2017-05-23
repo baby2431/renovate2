@@ -1,3 +1,5 @@
+package request;
+
 import renovate.http.*;
 
 
@@ -5,16 +7,15 @@ import renovate.http.*;
 public class PersonModel {
 
     @Header
-    String authorization = "ASDASDASD";
+    public String authorization = "ASDASDASD";
 
 
     @Query
-    String name;
+    public String name;
 
 
     @Params("age")
     @Ignore
-    int age;
-
+    public int age;
 
 }

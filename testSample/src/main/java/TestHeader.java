@@ -2,6 +2,7 @@ import okhttp3.ResponseBody;
 import renovate.Renovate;
 import renovate.Request;
 import renovate.RxAdapter;
+import request.PersonModel;
 import rx.Subscriber;
 
 import java.io.IOException;

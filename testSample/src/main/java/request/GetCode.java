@@ -6,7 +6,7 @@ import renovate.http.Params;
 
 @HTTP(method = HTTP.Method.POST, path = "api/member/code")
 @FormUrlEncoded
-public class GetCode implements Accept {
+public class GetCode {
     @Params
     private String mobile;
 

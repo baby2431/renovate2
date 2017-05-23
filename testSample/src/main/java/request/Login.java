@@ -4,14 +4,15 @@ import renovate.http.FormUrlEncoded;
 import renovate.http.HTTP;
 import renovate.http.Params;
 
-@HTTP(method = HTTP.Method.POST, path = "api/member/login")
+@HTTP(method = HTTP.Method.POST, path = "/Servlet")
 @FormUrlEncoded
-public class Login implements Accept {
-    @Params(value = "mobile")
+public class Login {
+    @Params("mobile")
     public String mobile;
 
-    @Params(value = "password")
+    @Params("password")
     public String password;
+
 
     public String getMobile() {
         return mobile;

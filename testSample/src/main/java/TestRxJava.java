@@ -1,6 +1,7 @@
 import okhttp3.ResponseBody;
 import renovate.Renovate;
 import renovate.RxAdapter;
+import request.PersonModel;
 import rx.Subscriber;
 
 import java.io.IOException;
@@ -16,7 +17,7 @@ public class TestRxJava {
         p.name = "xiao wenwen";
         System.out.println("current thread = " + Thread.currentThread().getName());
         Renovate renovate = new Renovate.Builder().baseUrl("http://localhost:8080/").build();
-        renovate.request(p).request(new RxAdapter<ResponseBody>()).subscribe(new Subscriber<ResponseBody>() {
+        renovate.request(p).request(new FastJsonConvert<ResponseBody>(), new RxAdapter<ResponseBody>()).subscribe(new Subscriber<ResponseBody>() {
             @Override
             public void onCompleted() {
                 System.out.println("compiled");
