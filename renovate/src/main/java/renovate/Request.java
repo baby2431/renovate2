@@ -32,24 +32,24 @@ public class Request extends HeaderCURD {
         this.object = object;
     }
 
-    public <T, E> E request(ResponseConvert<T> converter, CallAdapter<E> adapter) {
-        return adapter.adapt(request(converter));
+    public <T, E> E request(ResponseConvert<T> converter, CallAdapter<T, E> adapter) {
+        return adapter.adapt(request(converter), null);
     }
 
-    public <E> E request(CallAdapter<E> adapter) {
-        return adapter.adapt(request());
+    public <E> E request(CallAdapter<ResponseBody, E> adapter) {
+        return adapter.adapt(request(), null);
     }
 
     public <T> Call<T> request(ResponseConvert<T> converter) {
-        return new OkHttpCall<>(objectParser, object, converter,headerMap);
+        return new OkHttpCall<>(objectParser, object, converter, headerMap);
     }
 
     public <T> Call<T> request(Object object, ResponseConvert<T> converter) {
-        return new OkHttpCall<>(renovate.initObject(object), object, converter,headerMap);
+        return new OkHttpCall<>(renovate.initObject(object), object, converter, headerMap);
     }
 
     public Call<ResponseBody> request() {
-        return new OkHttpCall<>(renovate.initObject(object), object, renovate.responseBodyConverter(ResponseBody.class, objectParser.getAnnotations()),headerMap);
+        return new OkHttpCall<>(renovate.initObject(object), object, renovate.responseBodyConverter(ResponseBody.class, objectParser.getAnnotations()), headerMap);
     }
 }
 

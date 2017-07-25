@@ -4,12 +4,17 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/renovate/renovate.iml" filepath="$PROJECT_DIR$/.idea/modules/renovate/renovate.iml" group="renovate" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/renovate2.iml" filepath="$PROJECT_DIR$/.idea/modules/renovate2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/testSample/renovate2-testSample_main.iml" filepath="$PROJECT_DIR$/.idea/modules/testSample/renovate2-testSample_main.iml" group="testSample" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/testSample/renovate2-testSample_test.iml" filepath="$PROJECT_DIR$/.idea/modules/testSample/renovate2-testSample_test.iml" group="testSample" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/renovate/renovate_main.iml" filepath="$PROJECT_DIR$/.idea/modules/renovate/renovate_main.iml" group="renovate" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/renovate/renovate_test.iml" filepath="$PROJECT_DIR$/.idea/modules/renovate/renovate_test.iml" group="renovate" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/rx-renovate/rx-renovate.iml" filepath="$PROJECT_DIR$/.idea/modules/rx-renovate/rx-renovate.iml" group="rx-renovate" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/rx-renovate2/rx-renovate2.iml" filepath="$PROJECT_DIR$/.idea/modules/rx-renovate2/rx-renovate2.iml" group="rx-renovate2" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/rx-renovate2/rx-renovate2_main.iml" filepath="$PROJECT_DIR$/.idea/modules/rx-renovate2/rx-renovate2_main.iml" group="rx-renovate2" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/rx-renovate2/rx-renovate2_test.iml" filepath="$PROJECT_DIR$/.idea/modules/rx-renovate2/rx-renovate2_test.iml" group="rx-renovate2" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/rx-renovate/rx-renovate_main.iml" filepath="$PROJECT_DIR$/.idea/modules/rx-renovate/rx-renovate_main.iml" group="rx-renovate" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/rx-renovate/rx-renovate_test.iml" filepath="$PROJECT_DIR$/.idea/modules/rx-renovate/rx-renovate_test.iml" group="rx-renovate" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/testSample.iml" filepath="$PROJECT_DIR$/.idea/modules/testSample.iml" group="testSample" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/testSample/testSample.iml" filepath="$PROJECT_DIR$/.idea/modules/testSample/testSample.iml" group="testSample" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/testSample/testSample_main.iml" filepath="$PROJECT_DIR$/.idea/modules/testSample/testSample_main.iml" group="testSample" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/testSample/testSample_test.iml" filepath="$PROJECT_DIR$/.idea/modules/testSample/testSample_test.iml" group="testSample" />
     </modules>

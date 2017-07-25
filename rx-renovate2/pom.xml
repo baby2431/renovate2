@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+         xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+    <groupId>org.sirius.renovate</groupId>
+  <artifactId>rx-renovate</artifactId>
+    <version>0.3</version>
+  <name>Support Android and Java, okhttp based object HTTP network request Library</name>
+  <url>https://github.com/baby2431/renovate</url>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+        <id>Sirius</id>
+      <name>Sirius</name>
+      <email>243107006@qq.com</email>
+    </developer>
+  </developers>
+  <scm>
+    <connection>https://github.com/baby2431/renovate.git</connection>
+    <developerConnection>https://github.com/baby2431/renovate.git</developerConnection>
+    <url>https://github.com/baby2431/renovate</url>
+  </scm>
+  <dependencies>
+    <dependency>
+      <groupId>renovate2</groupId>
+      <artifactId>renovate</artifactId>
+      <version>0.3</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.reactivex</groupId>
+      <artifactId>rxjava</artifactId>
+      <version>1.2.0</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.reactivex</groupId>
+      <artifactId>rxandroid</artifactId>
+      <version>1.2.1</version>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+</project>

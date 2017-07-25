@@ -15,11 +15,14 @@
  */
 package renovate;
 
-class DefaultCallAdapter<T> implements CallAdapter<Call<T>> {
+
+
+class DefaultCallAdapter<T,E> implements CallAdapter<E,Call<T>> {
     static final DefaultCallAdapter INSTANCE = new DefaultCallAdapter();
 
+    //传入call转为rxjava实现等
     @Override
-    public <R> Call<T> adapt(Call<R> call) {
+    public Call<T> adapt(Call<E> call, AdapterParam param) {
         return (Call<T>) call;
     }
 }

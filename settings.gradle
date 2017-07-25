@@ -1,3 +1,5 @@
-include ':renovate', ':rx-renovate'
+include ':renovate'
+include ':rx-renovate'
+include ':rx-renovate2'
 include 'testSample'
 

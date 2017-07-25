@@ -2,8 +2,12 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel>
+      <module name="renovate2-testSample_main" target="1.8" />
+      <module name="renovate2-testSample_test" target="1.8" />
       <module name="renovate_main" target="1.7" />
       <module name="renovate_test" target="1.7" />
+      <module name="rx-renovate2_main" target="1.8" />
+      <module name="rx-renovate2_test" target="1.8" />
       <module name="rx-renovate_main" target="1.7" />
       <module name="rx-renovate_test" target="1.7" />
       <module name="testSample_main" target="1.8" />

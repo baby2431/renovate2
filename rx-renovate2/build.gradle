@@ -1,0 +1,108 @@
+apply plugin: 'org.ajoberstar.release-opinion'
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'maven-publish'
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
+//下面是添加的
+
+dependencies {
+
+    compile project(':renovate')
+    testCompile 'junit:junit:4.12'
+    compile 'io.reactivex.rxjava2:rxjava:2.1.1'
+    compile 'com.google.code.findbugs:jsr305:1.3.9'
+
+}
+version = "0.3"
+def siteUrl = 'https://github.com/baby2431/renovate'                        // #CONFIG# // project homepage
+def gitUrl = 'https://github.com/baby2431/renovate.git'                     // #CONFIG# // project git // #CONFIG# // Maven Group ID for the artifact (pageckage name is ok)
+group = "org.sirius.renovate"
+javadoc {
+    options {
+        encoding "UTF-8"
+        charSet 'UTF-8'
+        author true
+        version true
+        links "http://docs.oracle.com/javase/7/docs/api"
+    }
+}
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+allprojects {
+    tasks.withType(Javadoc) {
+        options.encoding = "UTF-8"
+    }
+}
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+
+}
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+
+Properties properties = new Properties()
+boolean isHasFile = false
+if (project.rootProject.file('local.properties') != null) {
+    isHasFile = true
+    properties.load(project.rootProject.file('local.properties').newDataInputStream())
+}
+
+install {
+    repositories.mavenInstaller {
+        // This generates POM.xml with proper parameters
+        pom {
+            project {
+                packaging 'jar'
+                groupId 'org.sirius.renovate'
+                artifactId 'rx-renovate'
+                // Add your description here
+                name 'Support Android and Java, okhttp based object HTTP network request Library'     //项目的描述 你可以多写一点
+                url siteUrl
+                // Set your license
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id 'Sirius'        //填写的一些基本信息
+                        name 'Sirius'
+                        email '243107006@qq.com'
+                    }
+                }
+                scm {
+                    connection gitUrl
+                    developerConnection gitUrl
+                    url siteUrl
+                }
+            }
+        }
+    }
+}
+bintray {
+    user = isHasFile ? properties.getProperty("bintray.user") : System.getenv("bintray.user")
+    key = isHasFile ? properties.getProperty("bintray.apikey") : System.getenv("bintray.apikey")
+    configurations = ['archives']
+    pkg {
+        // userOrg = "lemon" //这个是你创建时的organization,必须要有，不然没办法找到指定路径
+        repo = "maven" //这个仓库必须在 ‘shang’这个organization下，必须在网页上创建成功，否则还是无法找到 repo
+        name = "rx-renovate" //发布到JCenter上的项目名字
+        websiteUrl = siteUrl
+        vcsUrl = gitUrl
+        licenses = ["Apache-2.0"]
+        desc = 'Support Android and Java, okhttp based object HTTP network request Library'
+        publish = true
+    }
+}

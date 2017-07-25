@@ -52,13 +52,6 @@ class Platform {
     return null;
   }
 
-  <T>  CallAdapter<T> defaultCallAdapterFactory(Executor callbackExecutor) {
-    if (callbackExecutor != null) {
-      return (CallAdapter<T>) new ExecutorCallAdapter<T>(callbackExecutor);
-    }
-    return DefaultCallAdapter.INSTANCE;
-  }
-
 
   Object invokeDefaultMethod(Method method, Class<?> declaringClass, Object object, Object... args)
       throws Throwable {
@@ -86,9 +79,6 @@ class Platform {
       return new MainThreadExecutor();
     }
 
-    @Override CallAdapter defaultCallAdapterFactory(Executor callbackExecutor) {
-      return new ExecutorCallAdapter(callbackExecutor);
-    }
 
     static class MainThreadExecutor implements Executor {
       private final Handler handler = new Handler(Looper.getMainLooper());
